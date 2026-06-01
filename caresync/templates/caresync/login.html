@@ -1,0 +1,55 @@
+{% extends 'caresync/base.html' %}
+
+{% block public_content %}
+<section class="py-5 bg-light-subtle d-flex align-items-center" style="min-height: 80vh;">
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5 animate-fade-in">
+                <div class="glass-panel p-4 p-md-5 border-2 shadow-lg">
+                    <div class="text-center mb-4">
+                        <img src="/static/images/logo2.png?v=2" alt="CareSync Logo" class="mb-3" style="height: 60px;">
+                        <h2 class="fw-bold font-heading mb-1 text-dark" style="color: var(--text-main) !important;">Portal Login</h2>
+                        <p class="text-muted small">Enter credentials to access patient charts or doctor dashboards.</p>
+                    </div>
+                    
+                    <form action="{% url 'login' %}" method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Username or Email</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-transparent border-end-0 border-secondary border-opacity-25"><i class="fa-solid fa-user text-muted"></i></span>
+                                <input type="text" name="username" class="form-control border-start-0 border-secondary border-opacity-25" placeholder="username" required>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label text-muted small mb-0">Password</label>
+                                <a href="{% url 'forgot_password' %}" class="text-primary small fw-semibold">Forgot Password?</a>
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-text bg-transparent border-end-0 border-secondary border-opacity-25"><i class="fa-solid fa-lock text-muted"></i></span>
+                                <input type="password" name="password" class="form-control border-start-0 border-secondary border-opacity-25" placeholder="••••••••" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary-custom w-100 py-3">
+                            <i class="fa-solid fa-right-to-bracket me-2"></i>Log In to Portal
+                        </button>
+                    </form>
+                    
+                    <div class="text-center mt-4">
+                        <p class="mb-1 text-muted small">
+                            Not registered? <a href="{% url 'signup' %}" class="text-primary fw-semibold">Create Patient Profile</a>
+                        </p>
+                        <p class="mb-1 text-muted small">
+                            Are you a Doctor? <a href="{% url 'register_doctor' %}" class="text-primary fw-semibold">Register Doctor Profile</a>
+                        </p>
+                        <p class="mb-0 text-muted small">
+                            Forgot your password? <a href="{% url 'forgot_password' %}" class="text-primary fw-semibold">Recover Account</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

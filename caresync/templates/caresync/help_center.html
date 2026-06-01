@@ -1,0 +1,112 @@
+{% extends 'caresync/base.html' %}
+
+{% block content %}
+<div class="container-fluid animate-fade-in">
+    <div class="row g-4">
+        <!-- Ticket Launcher -->
+        <div class="col-lg-5">
+            <div class="glass-panel p-4">
+                <h4 class="fw-bold mb-3 text-dark" style="color: var(--text-main) !important;"><i class="fa-solid fa-circle-question text-primary me-2"></i>Submit Support Ticket</h4>
+                <p class="text-muted small mb-4">Facing issues with report downloads, profile settings, or AI scanning? Launch a support ticket.</p>
+                
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="d-flex flex-column gap-3">
+                        <div>
+                            <label class="form-label text-muted small fw-semibold">Subject</label>
+                            {{ form.subject }}
+                        </div>
+                        <div>
+                            <label class="form-label text-muted small fw-semibold">Issue Description</label>
+                            {{ form.description }}
+                        </div>
+                        <button type="submit" class="btn btn-primary-custom w-100 py-3 mt-2">
+                            <i class="fa-solid fa-paper-plane me-2"></i>Submit Ticket
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- FAQs and Existing Tickets -->
+        <div class="col-lg-7">
+            <div class="d-flex flex-column gap-4">
+                <!-- FAQs Accordion -->
+                <div class="glass-panel p-4">
+                    <h4 class="fw-bold mb-3 text-dark" style="color: var(--text-main) !important;"><i class="fa-solid fa-circle-info text-primary me-2"></i>Frequently Asked Questions</h4>
+                    
+                    <div class="accordion" id="faqAccordion">
+                        <div class="accordion-item bg-transparent border-0 border-bottom">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button bg-transparent fw-semibold text-dark collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                    How does the AI Fracture Scan work?
+                                </button>
+                            </h2>
+                            <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body text-muted small">
+                                    The AI scanner pre-processes your X-ray image file to convert it into a structural grid. It measures boundary contour pixel gradients. Areas displaying sudden, sharp discontinuities are flagged as potential fractures and highlighted with a red diagnostic overlay box.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item bg-transparent border-0 border-bottom">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button bg-transparent fw-semibold text-dark collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                    How do I download my clinic activity report?
+                                </button>
+                            </h2>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body text-muted small">
+                                    Navigate to the <b>View Reports</b> tab in the sidebar and click <b>Download Operational Report (PDF)</b>. The platform compiles clinic statistics and streams a PDF document directly to your device.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item bg-transparent border-0">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button bg-transparent fw-semibold text-dark collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                    Are my medical records secure?
+                                </button>
+                            </h2>
+                            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body text-muted small">
+                                    Yes, all files and clinical records are stored locally on SQLite and password-hashed. Route checks restrict other users from reading your profile particulars. In addition, admins track system security parameters via activity audit logs.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- My Tickets -->
+                <div class="glass-panel p-4">
+                    <h4 class="fw-bold mb-3 text-dark" style="color: var(--text-main) !important;"><i class="fa-solid fa-clipboard-list text-primary me-2"></i>My Tickets</h4>
+                    
+                    {% if tickets %}
+                    <div class="d-flex flex-column gap-3 my-2">
+                        {% for t in tickets %}
+                        <div class="border rounded p-3 bg-light">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <h6 class="fw-bold mb-0 text-dark" style="color: var(--text-main) !important;">#{{ t.user_ticket_num }}: {{ t.subject }}</h6>
+                                <span class="badge {% if t.status == 'Open' %}bg-warning text-dark{% else %}bg-success text-white{% endif %} small">
+                                    {{ t.status }}
+                                </span>
+                            </div>
+                            <p class="text-muted small mb-0">{{ t.description }}</p>
+                            {% if t.admin_response %}
+                            <div class="mt-2 p-2 border-start border-primary border-3 bg-white rounded small text-dark" style="color: var(--text-main) !important; font-size: 0.85rem;">
+                                <b>Admin Response:</b> {{ t.admin_response }}
+                            </div>
+                            {% endif %}
+                            <span class="small text-muted d-block mt-2" style="font-size: 0.75rem;">Submitted on {{ t.created_at|date:"M d, Y" }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted small">No support tickets launched yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

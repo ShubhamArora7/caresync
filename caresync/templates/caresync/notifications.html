@@ -1,0 +1,78 @@
+{% extends 'caresync/base.html' %}
+
+{% block content %}
+<div class="container-fluid animate-fade-in">
+    <div class="row g-4">
+        <!-- Notification Dispatch (Admin-only) -->
+        {% if user.is_superuser %}
+        <div class="col-lg-5">
+            <div class="glass-panel p-4">
+                <h4 class="fw-bold mb-3 text-dark" style="color: var(--text-main) !important;"><i class="fa-solid fa-bullhorn text-primary me-2"></i>Dispatch Notification</h4>
+                <p class="text-muted small mb-4">Send global broadcasts or direct alerts to individual patient dashboards.</p>
+                
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="d-flex flex-column gap-3">
+                        <div>
+                            <label class="form-label text-muted small fw-semibold">Recipient Patient</label>
+                            {{ form.recipient }}
+                            <span class="form-text text-muted small d-block mt-1">Leave empty to broadcast to all registered patient accounts.</span>
+                        </div>
+                        <div>
+                            <label class="form-label text-muted small fw-semibold">Alert Title</label>
+                            {{ form.title }}
+                        </div>
+                        <div>
+                            <label class="form-label text-muted small fw-semibold">Alert Message</label>
+                            {{ form.message }}
+                        </div>
+                        <button type="submit" class="btn btn-primary-custom w-100 py-3 mt-2">
+                            <i class="fa-solid fa-paper-plane me-2"></i>Send Broadcast
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Alert Feed List -->
+        <div class="col-lg-{% if user.is_superuser %}7{% else %}10 mx-auto{% endif %}">
+            <div class="glass-panel p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold mb-0 text-dark" style="color: var(--text-main) !important;"><i class="fa-solid fa-bell text-primary me-2"></i>Alerts & System Bulletins</h4>
+                    {% if notifications %}
+                    <form method="POST" class="m-0">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="clear_all">
+                        <button type="submit" class="btn btn-outline-danger btn-sm py-1 px-3 rounded-pill fw-semibold">
+                            <i class="fa-solid fa-trash-can me-1"></i>Clear All Feed
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+                
+                {% if notifications %}
+                <div class="d-flex flex-column gap-3">
+                    {% for n in notifications %}
+                    <div class="border rounded p-3 glass-panel bg-light bg-opacity-50">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5 class="fw-bold mb-0 text-dark" style="color: var(--text-main) !important; font-size: 1rem;"><i class="fa-solid fa-bullhorn text-primary me-2"></i>{{ n.title }}</h5>
+                            <span class="small text-muted" style="font-size: 0.75rem;"><i class="fa-solid fa-clock me-1"></i>{{ n.created_at|date:"M d, H:i" }}</span>
+                        </div>
+                        <p class="text-muted small mb-0">{{ n.message }}</p>
+                        {% if user.is_superuser %}
+                        <div class="d-flex justify-content-between mt-2 pt-2 border-top border-light align-items-center">
+                            <span class="small text-muted" style="font-size: 0.7rem;">Recipient: {% if n.recipient %}@{{ n.recipient.username }}{% else %}All Patients (Broadcast){% endif %}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted small text-center my-5">No notifications or clinic alerts found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

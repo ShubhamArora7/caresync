@@ -1,0 +1,152 @@
+{% extends 'caresync/base.html' %}
+
+{% block content %}
+<div class="container-fluid animate-fade-in">
+    <!-- Page Header -->
+    <div class="glass-panel p-4 mb-4">
+        <h2 class="fw-bold mb-0">Clinic System Analytics</h2>
+        <p class="text-muted small mb-0">Visual analysis charts representing department workloads, appointments, and patient registration trends.</p>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4">
+        <!-- Chart 1: Department distribution -->
+        <div class="col-lg-6">
+            <div class="glass-panel p-4 h-100">
+                <h4 class="fw-bold mb-3 text-dark" style="color: var(--text-main) !important;"><i class="fa-solid fa-hospital text-primary me-2"></i>Consultations by Department</h4>
+                <div style="position: relative; height:300px; width:100%">
+                    <canvas id="deptChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chart 2: Booking status -->
+        <div class="col-lg-6">
+            <div class="glass-panel p-4 h-100">
+                <h4 class="fw-bold mb-3 text-dark" style="color: var(--text-main) !important;"><i class="fa-solid fa-chart-pie text-primary me-2"></i>Appointment Status Distribution</h4>
+                <div style="position: relative; height:300px; width:100%">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chart 3: Patient & Doctor signups -->
+        <div class="col-12">
+            <div class="glass-panel p-4">
+                <h4 class="fw-bold mb-3 text-dark" style="color: var(--text-main) !important;"><i class="fa-solid fa-chart-line text-primary me-2"></i>Patient & Doctor Signup Registration Volume</h4>
+                <div style="position: relative; height:280px; width:100%">
+                    <canvas id="signupChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Theme variables mapping
+        const tealColor = '#0d9488';
+        const skyColor = '#0284c7';
+        const coralColor = '#f97316';
+        
+        // Department workload distribution (Bar Chart)
+        const ctxDept = document.getElementById('deptChart').getContext('2d');
+        new Chart(ctxDept, {
+            type: 'bar',
+            data: {
+                labels: {{ dept_labels|safe }},
+                datasets: [{
+                    label: 'Appointments Count',
+                    data: {{ dept_counts|safe }},
+                    backgroundColor: 'rgba(13, 148, 136, 0.75)',
+                    borderColor: tealColor,
+                    borderWidth: 1.5,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(148, 163, 184, 0.1)' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // Booking status distribution (Pie Chart)
+        const ctxStatus = document.getElementById('statusChart').getContext('2d');
+        new Chart(ctxStatus, {
+            type: 'doughnut',
+            data: {
+                labels: {{ status_labels|safe }},
+                datasets: [{
+                    data: {{ status_counts|safe }},
+                    backgroundColor: [
+                        'rgba(249, 115, 22, 0.75)',  // Pending (Coral)
+                        'rgba(2, 132, 199, 0.75)',   // Confirmed (Sky)
+                        'rgba(239, 68, 68, 0.75)',   // Cancelled (Red)
+                        'rgba(16, 185, 129, 0.75)'   // Completed (Green)
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+
+        // Patient & Doctor registrations timeline (Line Chart)
+        const ctxSignup = document.getElementById('signupChart').getContext('2d');
+        new Chart(ctxSignup, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: 'Patient Registrations',
+                    data: {{ patient_monthly_counts|safe }},
+                    backgroundColor: 'rgba(2, 132, 199, 0.15)',
+                    borderColor: skyColor,
+                    borderWidth: 3,
+                    tension: 0.35,
+                    fill: true,
+                    pointBackgroundColor: skyColor,
+                    pointRadius: 4
+                }, {
+                    label: 'Doctor Registrations',
+                    data: {{ doctor_monthly_counts|safe }},
+                    backgroundColor: 'rgba(13, 148, 136, 0.15)',
+                    borderColor: tealColor,
+                    borderWidth: 3,
+                    tension: 0.35,
+                    fill: true,
+                    pointBackgroundColor: tealColor,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true, position: 'top' }
+                },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(148, 163, 184, 0.1)' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

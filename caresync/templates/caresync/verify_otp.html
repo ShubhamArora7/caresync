@@ -1,0 +1,95 @@
+{% extends 'caresync/base.html' %}
+
+{% block public_content %}
+<section class="py-5 bg-light-subtle d-flex align-items-center" style="min-height: 80vh;">
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5 animate-fade-in">
+                <div class="glass-panel p-4 p-md-5 border-2 shadow-lg">
+                    <div class="text-center mb-4">
+                        <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-circle d-inline-flex mb-3">
+                            <i class="fa-solid fa-envelope-shield fs-2"></i>
+                        </div>
+                        <h2 class="fw-bold font-heading mb-1 text-dark" style="color: var(--text-main) !important;">Email Verification</h2>
+                        <p class="text-muted small">We've sent a 6-digit One-Time Password (OTP) to:<br>
+                           <strong class="text-primary">{{ email }}</strong>
+                        </p>
+                    </div>
+                    
+                    <form method="POST" action="{% url 'verify_otp' %}">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label class="form-label text-muted small fw-semibold d-block text-center mb-3">Enter Verification Code</label>
+                            
+                            <!-- Input Code Box -->
+                            <div class="d-flex justify-content-center">
+                                <input type="text" name="otp" id="otp_code" class="form-control text-center fs-2 fw-bold tracking-widest" 
+                                       placeholder="000000" maxlength="6" pattern="\d{6}" required autocomplete="off"
+                                       style="max-width: 220px; letter-spacing: 0.5rem; padding-left: 1.2rem;">
+                            </div>
+                            <div class="invalid-feedback text-center mt-2">Please enter a valid 6-digit numeric OTP code.</div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary-custom w-100 py-3 mb-3">
+                            <i class="fa-solid fa-user-check me-2"></i>Verify & Create Account
+                        </button>
+                    </form>
+                    
+                    <div class="text-center mt-3">
+                        <span class="small text-muted d-block mb-2">
+                            Code expires in: <strong class="text-danger" id="timer">05:00</strong>
+                        </span>
+                        
+                        <p class="mb-0 text-muted small">
+                            Didn't receive the email? <a href="{% url 'resend_otp' %}" id="resendBtn" class="text-primary fw-semibold disabled" style="pointer-events: none; opacity: 0.5;">Resend Code</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const timerSpan = document.getElementById('timer');
+        const resendBtn = document.getElementById('resendBtn');
+        
+        let timeLeft = 300; // 5 minutes in seconds
+        
+        function updateTimer() {
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            
+            // Format minutes/seconds
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            seconds = seconds < 10 ? '0' + seconds : seconds;
+            
+            timerSpan.textContent = minutes + ':' + seconds;
+            
+            if (timeLeft <= 0) {
+                clearInterval(countDown);
+                timerSpan.textContent = "Expired";
+                timerSpan.className = "text-danger fw-bold";
+                // Enable resend button
+                resendBtn.classList.remove('disabled');
+                resendBtn.style.pointerEvents = 'auto';
+                resendBtn.style.opacity = '1';
+            } else {
+                timeLeft--;
+            }
+        }
+        
+        updateTimer(); // Initial call
+        const countDown = setInterval(updateTimer, 1000);
+        
+        // Input validation to accept only numeric inputs
+        const otpInput = document.getElementById('otp_code');
+        otpInput.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+    });
+</script>
+{% endblock %}

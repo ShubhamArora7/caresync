@@ -1,0 +1,295 @@
+{% extends 'caresync/base.html' %}
+
+{% block content %}
+<div class="container-fluid animate-fade-in">
+    <!-- Doctor Info Banner -->
+    <div class="glass-panel p-4 mb-4">
+        <div class="row align-items-center g-3">
+            <div class="col-auto">
+                <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                    <i class="fa-solid fa-user-doctor fs-3"></i>
+                </div>
+            </div>
+            <div class="col">
+                <h2 class="fw-bold mb-0">Dr. {{ user.first_name }} {{ user.last_name }}</h2>
+                <p class="text-muted small mb-0">
+                    <span class="badge bg-primary-subtle text-primary me-2"><i class="fa-solid fa-hospital-user me-1"></i>{{ hospital }}</span>
+                    <span class="badge bg-success-subtle text-success"><i class="fa-solid fa-stethoscope me-1"></i>{{ department }} Department</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Navigation Tabs -->
+    <ul class="nav nav-pills mb-4 gap-2" id="doctorDashboardTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active btn-sm" id="queue-tab" data-bs-toggle="pill" data-bs-target="#queue-pane" type="button" role="tab" aria-controls="queue-pane" aria-selected="true">
+                <i class="fa-solid fa-clock-list me-1"></i>Consultation Queue ({{ appointments.count }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link btn-sm" id="patients-tab" data-bs-toggle="pill" data-bs-target="#patients-pane" type="button" role="tab" aria-controls="patients-pane" aria-selected="false">
+                <i class="fa-solid fa-hospital-user me-1"></i>Patient Directory ({{ patients.count }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link btn-sm" id="records-tab" data-bs-toggle="pill" data-bs-target="#records-pane" type="button" role="tab" aria-controls="records-pane" aria-selected="false">
+                <i class="fa-solid fa-folder-medical me-1"></i>Uploaded Reports ({{ records.count }})
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Contents -->
+    <div class="tab-content" id="doctorDashboardTabsContent">
+        <!-- Tab 1: Queue -->
+        <div class="tab-pane fade show active" id="queue-pane" role="tabpanel" aria-labelledby="queue-tab" tabindex="0">
+            <div class="glass-panel p-4">
+                <h4 class="fw-bold mb-3 text-dark" style="color: var(--text-main) !important;">
+                    <i class="fa-solid fa-clipboard-list text-primary me-2"></i>Incoming Consultation Queue
+                </h4>
+                <p class="text-muted small mb-4">Manage patient booking requests specifically targeted at your hospital and department.</p>
+
+                {% if appointments %}
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr class="text-muted small">
+                                <th>Patient Name</th>
+                                <th>Appointment Date</th>
+                                <th>Symptoms / Notes</th>
+                                <th>Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for app in appointments %}
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold text-dark" style="color: var(--text-main) !important;">{{ app.patient.first_name }} {{ app.patient.last_name }}</div>
+                                    <span class="small text-muted">@{{ app.patient.username }}</span>
+                                </td>
+                                <td class="small">{{ app.appointment_date|date:"M d, Y - H:i" }}</td>
+                                <td class="small text-muted">
+                                    <div><b>Symptoms:</b> {{ app.symptoms }}</div>
+                                    {% if app.notes %}
+                                    <div class="text-success mt-1"><b>Dr. Notes:</b> {{ app.notes }}</div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge badge-status {% if app.status == 'Pending' %}badge-pending{% elif app.status == 'Confirmed' %}badge-confirmed{% elif app.status == 'Completed' %}badge-completed{% else %}badge-cancelled{% endif %}">
+                                        {{ app.status }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#updateModal{{ app.id }}">
+                                        <i class="fa-solid fa-edit me-1"></i>Review / Update
+                                    </button>
+
+
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted small my-4 text-center">No appointments booked in your hospital & department queue.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Tab 2: Directory -->
+        <div class="tab-pane fade" id="patients-pane" role="tabpanel" aria-labelledby="patients-tab" tabindex="0">
+            <div class="glass-panel p-4">
+                <h4 class="fw-bold mb-3 text-dark" style="color: var(--text-main) !important;">
+                    <i class="fa-solid fa-users text-primary me-2"></i>Patient Bio Profiles
+                </h4>
+                <p class="text-muted small mb-4">View complete clinical charts, spec metrics, contact credentials, and download complete reports at once.</p>
+
+                {% if patients %}
+                <div class="row g-4">
+                    {% for p in patients %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card bg-light border-0 shadow-sm rounded-4 p-4 h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    {% if p.profile.profile_pic %}
+                                        <img src="{{ p.profile.profile_pic.url }}" alt="Profile Pic" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 50px; height: 50px; font-size: 1.25rem;">
+                                            {{ p.username|slice:":1"|upper }}
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <h5 class="fw-bold mb-0 text-dark" style="color: var(--text-main) !important;">{{ p.first_name }} {{ p.last_name }}</h5>
+                                        <span class="small text-muted">@{{ p.username }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="small mb-3">
+                                    <div class="mb-1"><i class="fa-solid fa-envelope me-2 text-muted"></i>{{ p.email }}</div>
+                                    <div class="mb-1"><i class="fa-solid fa-phone me-2 text-muted"></i>{{ p.profile.phone|default:"Not provided" }}</div>
+                                    <div class="mb-1"><i class="fa-solid fa-cake-candles me-2 text-muted"></i>{{ p.profile.date_of_birth|default:"Not provided" }}</div>
+                                    <div class="mb-1">
+                                        <i class="fa-solid fa-venus-mars me-2 text-muted"></i>{{ p.profile.get_gender_display|default:"-" }}
+                                        <span class="mx-2 text-muted">|</span>
+                                        <i class="fa-solid fa-droplet me-1 text-danger"></i><b>{{ p.profile.blood_group|default:"-" }}</b>
+                                    </div>
+                                    <div class="mb-1"><i class="fa-solid fa-address-book me-2 text-muted"></i>{{ p.profile.address|default:"Not provided" }}</div>
+                                    <div><i class="fa-solid fa-truck-medical me-2 text-warning"></i><b>Emergency:</b> {{ p.profile.emergency_contact|default:"-" }}</div>
+                                </div>
+                            </div>
+
+                            <div class="border-top pt-3 mt-3">
+                                <h6 class="text-muted small uppercase fw-bold mb-2">Download Reports at Once</h6>
+                                <div class="d-grid gap-2">
+                                    <a href="{% url 'download_patient_summary' p.id %}" class="btn btn-sm btn-outline-success">
+                                        <i class="fa-solid fa-file-pdf me-1"></i>Download Summary PDF
+                                    </a>
+                                    <a href="{% url 'download_all_patient_files' p.id %}" class="btn btn-sm btn-outline-info">
+                                        <i class="fa-solid fa-file-zipper me-1"></i>Download All Files (ZIP)
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted small my-4 text-center">No patient records found in your consult listings.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Tab 3: Records -->
+        <div class="tab-pane fade" id="records-pane" role="tabpanel" aria-labelledby="records-tab" tabindex="0">
+            <div class="glass-panel p-4">
+                <h4 class="fw-bold mb-3 text-dark" style="color: var(--text-main) !important;">
+                    <i class="fa-solid fa-file-medical text-primary me-2"></i>Patient Clinical Reports
+                </h4>
+                <p class="text-muted small mb-4">Access individual files and scans submitted by patients attending your consultations.</p>
+
+                {% if records %}
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr class="text-muted small">
+                                <th>Patient</th>
+                                <th>Document Title</th>
+                                <th>Category</th>
+                                <th>Uploaded Date</th>
+                                <th>Remarks</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in records %}
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold text-dark" style="color: var(--text-main) !important;">{{ r.patient.first_name }} {{ r.patient.last_name }}</div>
+                                    <span class="small text-muted">@{{ r.patient.username }}</span>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-dark" style="color: var(--text-main) !important;">{{ r.title }}</div>
+                                    <a href="{{ r.file.url }}" target="_blank" class="small text-muted text-decoration-underline">{{ r.file.name }}</a>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">{{ r.file_type }}</span>
+                                </td>
+                                <td class="small text-muted">{{ r.uploaded_at|date:"M d, Y - H:i" }}</td>
+                                <td class="small text-muted text-truncate" style="max-width: 150px;">
+                                    {{ r.doctor_remarks|default:"No remarks" }}
+                                </td>
+                                <td class="text-end">
+                                    <a href="{{ r.file.url }}" class="btn btn-sm btn-outline-success py-1 px-2" download title="Download">
+                                        <i class="fa-solid fa-download"></i>
+                                    </a>
+                                    <button class="btn btn-sm btn-outline-primary py-1 px-2 ms-1" data-bs-toggle="modal" data-bs-target="#remarkModal{{ r.id }}" title="Add Remark">
+                                        <i class="fa-solid fa-comment-medical"></i>
+                                    </button>
+
+
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted small my-4 text-center">No reports uploaded by your queue patients.</p>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% for app in appointments %}
+<!-- Update Modal -->
+<div class="modal fade" id="updateModal{{ app.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered text-start">
+        <div class="modal-content glass-panel p-4">
+            <h5 class="fw-bold mb-3"><i class="fa-solid fa-clipboard-check text-primary me-2"></i>Review Booking</h5>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="update_app_id" value="{{ app.id }}">
+                
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-semibold">Patient Name</label>
+                    <input type="text" class="form-control" value="{{ app.patient.first_name }} {{ app.patient.last_name }} (@{{ app.patient.username }})" disabled>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-semibold">Patient Symptoms</label>
+                    <textarea class="form-control" rows="2" disabled>{{ app.symptoms }}</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-semibold">Consultation Status</label>
+                    <select name="status" class="form-select">
+                        <option value="Pending" {% if app.status == 'Pending' %}selected{% endif %}>Pending</option>
+                        <option value="Confirmed" {% if app.status == 'Confirmed' %}selected{% endif %}>Confirmed</option>
+                        <option value="Completed" {% if app.status == 'Completed' %}selected{% endif %}>Completed</option>
+                        <option value="Cancelled" {% if app.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-semibold">Physician Notes / Advice</label>
+                    <textarea name="notes" class="form-control" rows="3" placeholder="Enter clinical advice or consultation remarks...">{{ app.notes|default:'' }}</textarea>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary-custom">Update Appointment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% for r in records %}
+<!-- Remark Modal -->
+<div class="modal fade" id="remarkModal{{ r.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered text-start">
+        <div class="modal-content glass-panel p-4">
+            <h5 class="fw-bold mb-3"><i class="fa-solid fa-comment-medical text-primary me-2"></i>Add Remark</h5>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="update_record_id" value="{{ r.id }}">
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-semibold">Doctor's Remark</label>
+                    <textarea name="doctor_remarks" class="form-control" rows="4" placeholder="Enter clinical observation for this report...">{{ r.doctor_remarks|default:'' }}</textarea>
+                </div>
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary-custom">Save Remark</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}

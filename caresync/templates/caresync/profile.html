@@ -1,0 +1,95 @@
+{% extends 'caresync/base.html' %}
+
+{% block content %}
+<div class="container-fluid animate-fade-in">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="glass-panel p-4 p-md-5">
+                <div class="row g-5 align-items-center mb-5">
+                    <div class="col-md-3 text-center">
+                        <div class="position-relative d-inline-block">
+                            {% if user.profile.profile_pic %}
+                                <img src="{{ user.profile.profile_pic.url }}" alt="Profile Photo" class="rounded-circle img-thumbnail shadow" style="width: 150px; height: 150px; object-fit: cover;">
+                            {% else %}
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center font-bold shadow mx-auto mb-2" style="width: 150px; height: 150px; font-size: 4.5rem; font-family: var(--font-heading);">
+                                    {{ user.username|slice:":1"|upper }}
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Direct upload form -->
+                            <form method="POST" enctype="multipart/form-data" class="mt-2">
+                                {% csrf_token %}
+                                <label for="directProfilePicInput" class="btn btn-sm btn-outline-secondary py-1 px-2 mb-0" style="font-size: 0.75rem; cursor: pointer;">
+                                    <i class="fa-solid fa-camera me-1"></i>Change Picture
+                                </label>
+                                <input type="file" id="directProfilePicInput" name="profile_pic" accept="image/*" style="display: none;" onchange="this.form.submit();">
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-9 text-center text-md-start">
+                        <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-semibold mb-2">
+                            {% if user.is_superuser %}Clinical Administrator{% elif user.profile.role == 'doctor' %}Medical Doctor{% else %}Registered Patient{% endif %}
+                        </span>
+                        <h1 class="fw-bold mb-2">{{ user.first_name }} {{ user.last_name }}</h1>
+                        <p class="text-muted mb-3"><i class="fa-solid fa-envelope me-2"></i>{{ user.email }}</p>
+                        
+                        <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
+                            <a href="{% url 'edit_profile' %}" class="btn btn-primary-custom py-2">
+                                <i class="fa-solid fa-user-pen me-2"></i>Edit Profile Info
+                            </a>
+                            <a href="{% url 'change_password' %}" class="btn btn-secondary-custom py-2">
+                                <i class="fa-solid fa-lock me-2"></i>Change Password
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <h4 class="fw-bold mb-4 text-primary"><i class="fa-solid fa-folder-user me-2"></i>Personal Particulars</h4>
+                <hr class="mb-4 opacity-10">
+                
+                <div class="row g-4">
+                    <div class="col-md-6 col-lg-4">
+                        <div class="mb-1 text-muted small">Username</div>
+                        <div class="fw-semibold text-dark" style="color: var(--text-main) !important;">{{ user.username }}</div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="mb-1 text-muted small">Phone Number</div>
+                        <div class="fw-semibold text-dark" style="color: var(--text-main) !important;">{{ user.profile.phone|default:"Not specified" }}</div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="mb-1 text-muted small">Date of Birth</div>
+                        <div class="fw-semibold text-dark" style="color: var(--text-main) !important;">{{ user.profile.date_of_birth|default:"Not specified" }}</div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="mb-1 text-muted small">Gender</div>
+                        <div class="fw-semibold text-dark" style="color: var(--text-main) !important;">{{ user.profile.get_gender_display|default:"Not specified" }}</div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="mb-1 text-muted small">Blood Group</div>
+                        <div class="fw-semibold text-dark text-danger" style="color: var(--text-main) !important;">{{ user.profile.blood_group|default:"Not specified" }}</div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="mb-1 text-muted small">Emergency Contact</div>
+                        <div class="fw-semibold text-dark" style="color: var(--text-main) !important;">{{ user.profile.emergency_contact|default:"Not specified" }}</div>
+                    </div>
+                    {% if user.profile.role == 'doctor' %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="mb-1 text-muted small">Hospital Affiliation</div>
+                        <div class="fw-semibold text-dark text-primary" style="color: var(--text-main) !important;">{{ user.profile.get_hospital_display|default:user.profile.hospital }}</div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="mb-1 text-muted small">Specialized Department</div>
+                        <div class="fw-semibold text-dark text-success" style="color: var(--text-main) !important;">{{ user.profile.get_department_display|default:user.profile.department }}</div>
+                    </div>
+                    {% endif %}
+                    <div class="col-12">
+                        <div class="mb-1 text-muted small">Physical Address</div>
+                        <div class="fw-semibold text-dark" style="color: var(--text-main) !important;">{{ user.profile.address|default:"Not specified" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

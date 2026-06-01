@@ -1,0 +1,38 @@
+{% extends 'caresync/base.html' %}
+
+{% block content %}
+<div class="container-fluid animate-fade-in">
+    <div class="row justify-content-center my-5">
+        <div class="col-lg-8 col-xl-6">
+            <div class="glass-panel p-5 text-center shadow-lg border-2 border-warning border-opacity-25">
+                <div class="bg-warning bg-opacity-10 text-warning p-4 rounded-circle d-inline-flex mb-4">
+                    <i class="fa-solid fa-user-clock fs-1 animate-pulse"></i>
+                </div>
+                
+                <h2 class="fw-bold mb-3 text-dark" style="color: var(--text-main) !important;">Account Verification Pending</h2>
+                
+                <p class="fs-5 text-muted mb-4">
+                    Welcome to CareSync, <b>Dr. {{ user.first_name }} {{ user.last_name }}</b>.
+                </p>
+                
+                <div class="alert alert-warning glass-panel border-start border-warning border-5 py-3 mb-4 text-start text-dark" style="color: var(--text-main) !important;" role="alert">
+                    <h6 class="fw-bold mb-2"><i class="fa-solid fa-circle-exclamation me-2"></i>Action Required:</h6>
+                    <p class="small mb-0">
+                        Please let the admin verify your credentials and your clinic account will open. The verification process typically takes up to <b>7 days</b>.
+                    </p>
+                </div>
+                
+                <p class="text-muted small mb-5">
+                    For urgent credential approvals, please contact the hospital administration office or clinical portal head of operations.
+                </p>
+                
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{% url 'logout' %}" class="btn btn-outline-danger px-4 py-2">
+                        <i class="fa-solid fa-right-from-bracket me-2"></i>Log Out Portal
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

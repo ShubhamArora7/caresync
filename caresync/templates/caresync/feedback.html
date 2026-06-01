@@ -1,0 +1,67 @@
+{% extends 'caresync/base.html' %}
+
+{% block content %}
+<div class="container-fluid animate-fade-in">
+    <div class="row g-4">
+        <!-- Submit Feedback (For patient) -->
+        {% if not user.is_superuser %}
+        <div class="col-lg-5">
+            <div class="glass-panel p-4">
+                <h4 class="fw-bold mb-3 text-dark" style="color: var(--text-main) !important;"><i class="fa-solid fa-comment-medical text-primary me-2"></i>Submit Feedback</h4>
+                <p class="text-muted small mb-4">Let us know how your portal experience went and what clinical services we can optimize.</p>
+                
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="d-flex flex-column gap-3">
+                        <div>
+                            <label class="form-label text-muted small fw-semibold">Quality Rating</label>
+                            {{ form.rating }}
+                        </div>
+                        <div>
+                            <label class="form-label text-muted small fw-semibold">Comments</label>
+                            {{ form.comments }}
+                        </div>
+                        <button type="submit" class="btn btn-primary-custom w-100 py-3 mt-2">
+                            <i class="fa-solid fa-star me-2"></i>Send Feedback
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Reviews list -->
+        <div class="col-lg-{% if not user.is_superuser %}7{% else %}10 mx-auto{% endif %}">
+            <div class="glass-panel p-4 h-100">
+                <h4 class="fw-bold mb-4 text-dark" style="color: var(--text-main) !important;"><i class="fa-solid fa-comments text-primary me-2"></i>Patient Testimonies & Reviews</h4>
+                
+                {% if feedbacks %}
+                <div class="d-flex flex-column gap-3">
+                    {% for f in feedbacks %}
+                    <div class="border rounded p-3 bg-light">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                                    {{ f.user.username|slice:":1"|upper }}
+                                </div>
+                                <h6 class="fw-bold mb-0 text-dark" style="color: var(--text-main) !important; font-size: 0.95rem;">{{ f.user.first_name|default:f.user.username }}</h6>
+                            </div>
+                            <span class="text-warning small">
+                                {% for i in "12345"|make_list %}
+                                    <i class="{% if forloop.counter <= f.rating %}fa-solid{% else %}fa-regular{% endif %} fa-star"></i>
+                                {% endfor %}
+                            </span>
+                        </div>
+                        <p class="text-muted small mb-0 font-italic">"{{ f.comments }}"</p>
+                        <span class="small text-muted d-block mt-2" style="font-size: 0.72rem;">Received on {{ f.created_at|date:"M d, Y" }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted small text-center my-5">No patient reviews logged yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

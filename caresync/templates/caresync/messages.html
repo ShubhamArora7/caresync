@@ -1,0 +1,114 @@
+{% extends 'caresync/base.html' %}
+
+{% block content %}
+<div class="container-fluid animate-fade-in">
+    <div class="glass-panel p-4">
+        <h2 class="fw-bold mb-0">Client Communications & Support</h2>
+        <p class="text-muted small mb-4">Manage contact form submissions and reply to support tickets launched by patients and doctors.</p>
+
+        <!-- Tabs Navigation -->
+        <ul class="nav nav-pills mb-4 gap-2" id="communicationsTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active btn-sm" id="inquiries-tab" data-bs-toggle="pill" data-bs-target="#inquiries-pane" type="button" role="tab" aria-controls="inquiries-pane" aria-selected="true">
+                    <i class="fa-solid fa-envelope-open-text me-1"></i>Contact Inquiries ({{ queries.count }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link btn-sm" id="tickets-tab" data-bs-toggle="pill" data-bs-target="#tickets-pane" type="button" role="tab" aria-controls="tickets-pane" aria-selected="false">
+                    <i class="fa-solid fa-circle-question me-1"></i>Support Tickets ({{ tickets.count }})
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="communicationsTabsContent">
+            <!-- Tab 1: Inquiries -->
+            <div class="tab-pane fade show active" id="inquiries-pane" role="tabpanel" aria-labelledby="inquiries-tab" tabindex="0">
+                {% if queries %}
+                <div class="d-flex flex-column gap-3">
+                    {% for q in queries %}
+                    <div class="border rounded p-3 glass-panel bg-light">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5 class="fw-bold mb-0 text-primary" style="font-size: 1.05rem;">
+                                <i class="fa-solid fa-envelope-open-text me-2"></i>{{ q.title }}
+                            </h5>
+                            <span class="small text-muted" style="font-size: 0.75rem;">
+                                <i class="fa-solid fa-calendar-day me-1"></i>{{ q.created_at|date:"M d, Y - H:i" }}
+                            </span>
+                        </div>
+                        <p class="text-muted mb-0 small" style="line-height: 1.5;">{{ q.message }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted small text-center my-5">No contact form messages or client inquiries received.</p>
+                {% endif %}
+            </div>
+
+            <!-- Tab 2: Support Tickets -->
+            <div class="tab-pane fade" id="tickets-pane" role="tabpanel" aria-labelledby="tickets-tab" tabindex="0">
+                {% if tickets %}
+                <div class="d-flex flex-column gap-4">
+                    {% for t in tickets %}
+                    <div class="border rounded p-4 glass-panel bg-light">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h5 class="fw-bold mb-1 text-dark" style="color: var(--text-main) !important; font-size: 1.1rem;">
+                                    Ticket #{{ t.user_ticket_num }}: {{ t.subject }}
+                                </h5>
+                                <span class="small text-muted">
+                                    Submitted by <b>{{ t.user.first_name }} {{ t.user.last_name }}</b> ({{ t.user.profile.role|title }}) (@{{ t.user.username }}) on {{ t.created_at|date:"M d, Y - H:i" }}
+                                </span>
+                            </div>
+                            <span class="badge {% if t.status == 'Open' %}bg-warning text-dark{% else %}bg-success text-white{% endif %} px-3 py-1 rounded-pill">
+                                {{ t.status }}
+                            </span>
+                        </div>
+                        
+                        <p class="text-dark small mb-3 p-3 bg-white border rounded" style="color: var(--text-main) !important;">
+                            {{ t.description }}
+                        </p>
+
+                        <!-- Reply / Admin Response Section -->
+                        <div class="mt-3">
+                            {% if t.admin_response %}
+                            <div class="p-3 border-start border-success border-4 bg-success-subtle bg-opacity-10 rounded small text-dark mb-3" style="color: var(--text-main) !important;">
+                                <h6 class="fw-bold mb-1"><i class="fa-solid fa-reply me-1"></i>Previous Response:</h6>
+                                {{ t.admin_response }}
+                            </div>
+                            {% endif %}
+
+                            <!-- Reply Form -->
+                            <div class="mt-2">
+                                <h6 class="fw-bold small text-muted mb-2">
+                                    {% if t.admin_response %}Send Another Response{% else %}Reply to User{% endif %}
+                                </h6>
+                                <form method="POST">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="ticket_id" value="{{ t.id }}">
+                                    <div class="mb-3">
+                                        <textarea name="reply_content" class="form-control" rows="2" placeholder="Write clinical portal support advice..." required></textarea>
+                                    </div>
+                                    <div class="d-flex flex-wrap align-items-center gap-2">
+                                        <button type="submit" class="btn btn-sm btn-primary-custom py-2 px-3">
+                                            <i class="fa-solid fa-paper-plane me-2"></i>Dispatch Response
+                                        </button>
+                                        {% if t.status == 'Open' %}
+                                        <button type="submit" name="close_ticket" value="1" class="btn btn-sm btn-outline-success py-2 px-3" formnovalidate>
+                                            <i class="fa-solid fa-circle-check me-2"></i>Close Ticket
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted small text-center my-5">No support tickets filed yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

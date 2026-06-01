@@ -1,0 +1,153 @@
+{% extends 'caresync/base.html' %}
+{% load static %}
+
+{% block public_content %}
+<!-- Hero Section -->
+<section class="py-5 position-relative overflow-hidden" style="background: radial-gradient(circle at 80% 20%, rgba(13, 148, 136, 0.08), transparent 50%);">
+    <div class="container py-5">
+        <div class="row align-items-center g-5 animate-fade-in">
+            <div class="col-lg-6">
+                <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill fw-semibold mb-3 fs-6">
+                    <i class="fa-solid fa-sparkles me-2"></i>Next-Gen Healthcare Portal
+                </span>
+                <h1 class="display-3 fw-bold mb-4 font-heading" style="color: var(--text-main); line-height: 1.15;">
+                    Empowering Clinics, <br>
+                    <span class="text-primary bg-gradient">Connecting Care.</span>
+                </h1>
+                <p class="lead text-muted mb-4 fs-5" style="max-width: 520px;">
+                    CareSync brings patient management, secure digital medical records, and advanced AI-powered X-ray diagnostics into a single elegant workspace.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="{% url 'signup' %}" class="btn btn-primary-custom px-4 py-3 fs-6">
+                        <i class="fa-solid fa-user-plus me-2"></i>Register Patient Profile
+                    </a>
+                    <a href="{% url 'about' %}" class="btn btn-secondary-custom px-4 py-3 fs-6">
+                        Learn More <i class="fa-solid fa-arrow-right-long ms-2"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="position-relative">
+                    <!-- Decorative Circle behind card -->
+                    <div class="position-absolute translate-middle bg-primary rounded-circle opacity-10 blur-3xl" style="width: 400px; height: 400px; top: 50%; left: 50%; z-index: -1;"></div>
+                    
+                    <div class="glass-panel p-4 p-md-5 border-2 pulse-border-active mx-auto" style="max-width: 480px;">
+                        <h4 class="fw-bold mb-4 text-center"><i class="fa-solid fa-lock-open text-primary me-2"></i>Portal Quick Access</h4>
+                        <form action="{% url 'login' %}" method="POST">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">Username or Email</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-transparent border-end-0 border-secondary border-opacity-25"><i class="fa-solid fa-user text-muted"></i></span>
+                                    <input type="text" name="username" class="form-control border-start-0 border-secondary border-opacity-25" placeholder="username" required>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label class="form-label text-muted small mb-0">Password</label>
+                                    <a href="{% url 'forgot_password' %}" class="text-primary small fw-semibold">Forgot Password?</a>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-transparent border-end-0 border-secondary border-opacity-25"><i class="fa-solid fa-lock text-muted"></i></span>
+                                    <input type="password" name="password" class="form-control border-start-0 border-secondary border-opacity-25" placeholder="••••••••" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary-custom w-100 py-3">
+                                <i class="fa-solid fa-right-to-bracket me-2"></i>Log In to Dashboard
+                            </button>
+                        </form>
+                        <p class="text-center mt-3 mb-0 small text-muted">
+                            New patient? <a href="{% url 'signup' %}" class="text-primary fw-semibold">Sign up now</a>
+                            <br>
+                            Are you a Doctor? <a href="{% url 'register_doctor' %}" class="text-primary fw-semibold">Register here</a>
+                            <br>
+                            Forgot your password? <a href="{% url 'forgot_password' %}" class="text-primary fw-semibold">Recover Account</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Grid -->
+<section class="py-5 bg-light-subtle">
+    <div class="container py-4">
+        <div class="text-center mb-5 max-w-lg mx-auto">
+            <h2 class="fw-bold fs-1 mb-3">All-In-One Clinic Workflow</h2>
+            <p class="text-muted fs-5">A comprehensive suite of tools built to elevate healthcare coordination and data audits.</p>
+        </div>
+        
+        <div class="row g-4 justify-content-center">
+            <!-- Feature 1 -->
+            <div class="col-md-6 col-lg-3">
+                <div class="glass-panel p-4 h-100 glass-card-hover text-center">
+                    <div class="icon-wrapper bg-primary bg-opacity-10 text-primary mx-auto mb-3 rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                        <i class="fa-solid fa-calendar-check fs-4"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Track Appointments</h5>
+                    <p class="text-muted small mb-0">Schedule appointments, view status updates, and track consulting schedules seamlessly.</p>
+                </div>
+            </div>
+            <!-- Feature 2 -->
+            <div class="col-md-6 col-lg-3">
+                <div class="glass-panel p-4 h-100 glass-card-hover text-center">
+                    <div class="icon-wrapper bg-success bg-opacity-10 text-success mx-auto mb-3 rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                        <i class="fa-solid fa-bone fs-4"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">AI Bone Fracture Scan</h5>
+                    <p class="text-muted small mb-0">Upload X-ray reports to run diagnostic discontinuity checking and generate heatmaps instantly.</p>
+                </div>
+            </div>
+            <!-- Feature 3 -->
+            <div class="col-md-6 col-lg-3">
+                <div class="glass-panel p-4 h-100 glass-card-hover text-center">
+                    <div class="icon-wrapper bg-info bg-opacity-10 text-info mx-auto mb-3 rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                        <i class="fa-solid fa-file-pdf fs-4"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Export PDF Reports</h5>
+                    <p class="text-muted small mb-0">Compile complete clinical logs and database snapshots into formatted PDF digests for administrative storage.</p>
+                </div>
+            </div>
+            <!-- Feature 4 -->
+            <div class="col-md-6 col-lg-3">
+                <div class="glass-panel p-4 h-100 glass-card-hover text-center">
+                    <div class="icon-wrapper bg-warning bg-opacity-10 text-warning mx-auto mb-3 rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                        <i class="fa-solid fa-shield-halved fs-4"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Secure Activity Logs</h5>
+                    <p class="text-muted small mb-0">Monitor platform safety and updates with immutable activity tracking tables detailing client actions.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="py-5">
+    <div class="container py-4">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold fs-1">Loved by Patients & Doctors</h2>
+            <p class="text-muted">Real reviews from members using the CareSync clinical portal.</p>
+        </div>
+        
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-4">
+                <div class="glass-panel p-4 h-100 text-center">
+                    <div class="text-warning mb-3"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                    <h6 class="fw-bold mb-0">Aarav Sharma</h6>
+                    <span class="small text-muted">Patient</span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="glass-panel p-4 h-100 text-center">
+                    <div class="text-warning mb-3"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                    <h6 class="fw-bold mb-0">Rajesh Mehta</h6>
+                    <span class="small text-muted">Patient</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

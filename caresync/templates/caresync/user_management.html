@@ -1,0 +1,204 @@
+{% extends 'caresync/base.html' %}
+
+{% block content %}
+<div class="container-fluid animate-fade-in">
+    <div class="glass-panel p-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+            <div>
+                <h2 class="fw-bold mb-0">Clinical User Directory</h2>
+                <p class="text-muted small mb-0">View, search, edit, and configure registered CareSync patient and physician accounts.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'user_create' %}" class="btn btn-primary-custom">
+                    <i class="fa-solid fa-user-plus me-2"></i>Register New Patient
+                </a>
+            </div>
+        </div>
+        
+        <!-- Search bar -->
+        <form method="GET" class="mb-4">
+            <div class="input-group">
+                <span class="input-group-text bg-transparent border-end-0 border-secondary border-opacity-25"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                <input type="text" name="q" value="{{ query }}" class="form-control border-start-0 border-secondary border-opacity-25" placeholder="Search by name, email, phone or username...">
+                <button type="submit" class="btn btn-primary-custom">Search Directory</button>
+                {% if query %}
+                    <a href="{% url 'user_management' %}" class="btn btn-outline-secondary d-flex align-items-center">Clear</a>
+                {% endif %}
+            </div>
+        </form>
+
+        <!-- Directory Tabs -->
+        <ul class="nav nav-pills mb-4 gap-2" id="directoryTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active btn-sm" id="patients-tab" data-bs-toggle="pill" data-bs-target="#patients-pane" type="button" role="tab" aria-controls="patients-pane" aria-selected="true">
+                    <i class="fa-solid fa-users me-1"></i>Patient Profiles ({{ patients.count }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link btn-sm" id="doctors-tab" data-bs-toggle="pill" data-bs-target="#doctors-pane" type="button" role="tab" aria-controls="doctors-pane" aria-selected="false">
+                    <i class="fa-solid fa-user-doctor me-1"></i>Doctor Profiles ({{ doctors.count }})
+                </button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="directoryTabsContent">
+            <!-- Patients Pane -->
+            <div class="tab-pane fade show active" id="patients-pane" role="tabpanel" aria-labelledby="patients-tab" tabindex="0">
+                {% if patients %}
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr class="text-muted small">
+                                <th>Avatar</th>
+                                <th>Username & Name</th>
+                                <th>Contact</th>
+                                <th>Emergency Contact</th>
+                                <th>Bio Specs</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in patients %}
+                            <tr>
+                                <td>
+                                    {% if u.profile.profile_pic %}
+                                        <img src="{{ u.profile.profile_pic.url }}" alt="Avatar" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px; font-size: 1rem;">
+                                            {{ u.username|slice:":1"|upper }}
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-dark" style="color: var(--text-main) !important;">{{ u.first_name }} {{ u.last_name }}</div>
+                                    <span class="small text-muted">@{{ u.username }}</span>
+                                </td>
+                                <td class="small">
+                                    <div><i class="fa-solid fa-envelope me-1 text-muted"></i>{{ u.email }}</div>
+                                    <div><i class="fa-solid fa-phone me-1 text-muted"></i>{{ u.profile.phone|default:"-" }}</div>
+                                </td>
+                                <td class="small text-muted">
+                                    {{ u.profile.emergency_contact|default:"-" }}
+                                </td>
+                                <td class="small">
+                                    <span class="badge bg-light text-dark border me-1">{{ u.profile.get_gender_display|default:"-" }}</span>
+                                    <span class="badge bg-danger-subtle text-danger border">{{ u.profile.blood_group|default:"-" }}</span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <a href="{% url 'download_patient_summary' u.id %}" class="btn btn-sm btn-outline-success py-1 px-2" title="Download Medical Summary (PDF)"><i class="fa-solid fa-file-pdf"></i></a>
+                                        <a href="{% url 'download_all_patient_files' u.id %}" class="btn btn-sm btn-outline-info py-1 px-2" title="Download All Records (ZIP)"><i class="fa-solid fa-file-zipper"></i></a>
+                                        <a href="{% url 'user_edit' u.id %}" class="btn btn-sm btn-outline-primary py-1 px-2" title="Edit patient"><i class="fa-solid fa-user-pen"></i></a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2" data-bs-toggle="modal" data-bs-target="#deleteModal{{ u.id }}" title="Delete patient"><i class="fa-solid fa-trash-can"></i></button>
+                                    </div>
+                                    
+                                    <!-- Delete Modal -->
+                                    <div class="modal fade" id="deleteModal{{ u.id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content glass-panel p-4 text-start">
+                                                <h5 class="fw-bold mb-3"><i class="fa-solid fa-triangle-exclamation text-danger me-2"></i>Delete Patient Profile</h5>
+                                                <p class="text-muted small">Are you sure you want to permanently delete the patient profile for <b>{{ u.first_name }} {{ u.last_name }}</b> (username: @{{ u.username }})? This action will remove all their appointment records and uploaded files.</p>
+                                                <div class="d-flex justify-content-end gap-2 mt-4">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <a href="{% url 'user_delete' u.id %}" class="btn btn-danger">Confirm Delete</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted my-4 text-center">No patient records found.</p>
+                {% endif %}
+            </div>
+
+            <!-- Doctors Pane -->
+            <div class="tab-pane fade" id="doctors-pane" role="tabpanel" aria-labelledby="doctors-tab" tabindex="0">
+                {% if doctors %}
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr class="text-muted small">
+                                <th>Avatar</th>
+                                <th>Physician Details</th>
+                                <th>Contact Details</th>
+                                <th>Hospital & Dept</th>
+                                <th>Verification Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for doc in doctors %}
+                            <tr>
+                                <td>
+                                    {% if doc.profile.profile_pic %}
+                                        <img src="{{ doc.profile.profile_pic.url }}" alt="Avatar" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px; font-size: 1rem;">
+                                            {{ doc.username|slice:":1"|upper }}
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-dark" style="color: var(--text-main) !important;">Dr. {{ doc.first_name }} {{ doc.last_name }}</div>
+                                    <span class="small text-muted">@{{ doc.username }}</span>
+                                </td>
+                                <td class="small">
+                                    <div><i class="fa-solid fa-envelope me-1 text-muted"></i>{{ doc.email }}</div>
+                                    <div><i class="fa-solid fa-phone me-1 text-muted"></i>{{ doc.profile.phone|default:"-" }}</div>
+                                </td>
+                                <td class="small">
+                                    <span class="badge bg-light text-dark border me-1">{{ doc.profile.get_hospital_display }}</span>
+                                    <span class="badge bg-primary-subtle text-primary border">{{ doc.profile.get_department_display|default:doc.profile.department }}</span>
+                                </td>
+                                <td>
+                                    {% if doc.profile.is_approved %}
+                                        <span class="badge bg-success-subtle text-success border px-2 py-1"><i class="fa-solid fa-circle-check me-1"></i>Verified Physician</span>
+                                    {% else %}
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge bg-warning-subtle text-warning border px-2 py-1"><i class="fa-solid fa-user-clock me-1"></i>Pending Admin Verification</span>
+                                            <form method="POST">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="verify_doctor_id" value="{{ doc.id }}">
+                                                <button type="submit" class="btn btn-xs btn-success py-0 px-2 fs-7" style="font-size: 0.75rem;"><i class="fa-solid fa-user-check me-1"></i>Verify Now</button>
+                                            </form>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <a href="{% url 'user_edit' doc.id %}" class="btn btn-sm btn-outline-primary py-1 px-2" title="Edit doctor"><i class="fa-solid fa-user-pen"></i></a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2" data-bs-toggle="modal" data-bs-target="#deleteDocModal{{ doc.id }}" title="Delete doctor"><i class="fa-solid fa-trash-can"></i></button>
+                                    </div>
+                                    
+                                    <!-- Delete Modal -->
+                                    <div class="modal fade" id="deleteDocModal{{ doc.id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content glass-panel p-4 text-start">
+                                                <h5 class="fw-bold mb-3"><i class="fa-solid fa-triangle-exclamation text-danger me-2"></i>Delete Physician Profile</h5>
+                                                <p class="text-muted small">Are you sure you want to permanently delete the physician profile for <b>Dr. {{ doc.first_name }} {{ doc.last_name }}</b> (username: @{{ doc.username }})? All their consulting queues will be cleared.</p>
+                                                <div class="d-flex justify-content-end gap-2 mt-4">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <a href="{% url 'user_delete' doc.id %}" class="btn btn-danger">Confirm Delete</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted my-4 text-center">No doctor records found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends 'caresync/base.html' %}
+
+{% block content %}
+<div class="container-fluid animate-fade-in">
+    <!-- Top Header -->
+    <div class="glass-panel p-4 mb-4">
+        <div class="d-flex align-items-center gap-3">
+            <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-circle">
+                <i class="fa-solid fa-bone fs-3 animate-pulse"></i>
+            </div>
+            <div>
+                <h2 class="fw-bold mb-0">AI Bone Fracture Detector</h2>
+                <p class="text-muted small mb-0">Run high-gradient structural boundary discontinuity scanning on clinical X-ray frames.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Upload & Run Card -->
+        <div class="col-lg-4">
+            <div class="glass-panel p-4">
+                <h4 class="fw-bold mb-3 text-dark" style="color: var(--text-main) !important;"><i class="fa-solid fa-cloud-arrow-up text-primary me-2"></i>Run Immediate Scan</h4>
+                <p class="text-muted small mb-4">Upload an X-ray JPEG/PNG image. The system will pre-process the image, search for contour breaks, and highlight anomalies.</p>
+                
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="d-flex flex-column gap-3">
+                        <div>
+                            <label class="form-label text-muted small fw-semibold">Scan Title</label>
+                            <input type="text" name="title" class="form-control" placeholder="e.g. Right Wrist X-Ray" required>
+                        </div>
+                        <div>
+                            <label class="form-label text-muted small fw-semibold">Select X-Ray File</label>
+                            <input type="file" name="xray_file" class="form-control" accept="image/*" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary-custom w-100 py-3 mt-2">
+                            <i class="fa-solid fa-microchip-ai me-2"></i>Upload & Analyze
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- History & Diagnostic Results -->
+        <div class="col-lg-8">
+            <div class="glass-panel p-4">
+                <h4 class="fw-bold mb-4 text-dark" style="color: var(--text-main) !important;"><i class="fa-solid fa-receipt text-primary me-2"></i>AI Diagnostic Scan History</h4>
+                
+                {% if xrays %}
+                    <div class="d-flex flex-column gap-4">
+                        {% for xr in xrays %}
+                        <div class="border rounded p-3 bg-light bg-opacity-50">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h5 class="fw-bold mb-0 text-dark" style="color: var(--text-main) !important;">{{ xr.record.title }}</h5>
+                                    <span class="small text-muted">Uploaded on {{ xr.record.uploaded_at|date:"M d, Y - H:i" }} by @{{ xr.record.patient.username }}</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if xr.record.ai_analyzed %}
+                                        <span class="badge {% if xr.record.ai_has_fracture %}bg-danger text-white{% else %}bg-success text-white{% endif %} px-3 py-2 rounded-pill">
+                                            {% if xr.record.ai_has_fracture %}Potential Fracture Detected{% else %}No apparent fracture{% endif %}
+                                        </span>
+                                    {% else %}
+                                        <form method="POST" class="m-0">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="run_ai_id" value="{{ xr.record.id }}">
+                                            <button type="submit" class="btn btn-primary py-1 px-3 small" style="font-size: 0.85rem;"><i class="fa-solid fa-play me-1"></i>Run Scan</button>
+                                        </form>
+                                    {% endif %}
+                                    <form method="POST" class="m-0" onsubmit="return confirm('Are you sure you want to permanently delete the X-Ray scan \'{{ xr.record.title }}\'? This will purge the file and its AI analysis from CareSync.');">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="delete_id" value="{{ xr.record.id }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" title="Delete scan">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            
+                            {% if xr.record.ai_analyzed %}
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="analysis-container">
+                                        <div class="xray-canvas-wrapper">
+                                            <!-- Scan overlay line effect -->
+                                            <div class="scan-line"></div>
+                                            <!-- If analyzed, show the overlay annotated image if available, else standard file -->
+                                            {% if xr.meta.overlay %}
+                                                <img src="/media/{{ xr.meta.overlay }}" alt="AI Annotation Visualizer">
+                                            {% else %}
+                                                <img src="{{ xr.record.file.url }}" alt="Standard X-Ray file">
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <span class="d-block text-center text-muted small mt-2">Diagnostic Scan Overlay Box</span>
+                                </div>
+                                <div class="col-md-6 d-flex flex-column justify-content-between">
+                                    <div>
+                                        <h6 class="fw-bold text-muted small">AI FINDINGS & RECOMMENDATIONS</h6>
+                                        <p class="small text-dark mb-4" style="line-height: 1.5; color: var(--text-main) !important;">{{ xr.meta.findings|default:"Analysis complete. SKeletal contours show normal configurations." }}</p>
+                                        
+                                        <h6 class="fw-bold text-muted small mb-2">SCAN CONFIDENCE</h6>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="confidence-gauge flex-grow-1">
+                                                <div class="confidence-fill" style="width: {{ xr.meta.confidence }}%"></div>
+                                            </div>
+                                            <span class="fw-bold text-primary">{{ xr.meta.confidence }}%</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-4 pt-3 border-top border-secondary border-opacity-10 text-muted small">
+                                        <i class="fa-solid fa-circle-exclamation me-1 text-warning"></i> This is a simulated edge-detection diagnostic tool to aid radiologist workflows. Do not substitute for final specialist verification.
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <p class="text-muted small my-3">Analysis pending. Click Run Scan above to process diagnostic gradients.</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted small text-center my-5">No clinical X-ray files uploaded. Use the card on the left to add one.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

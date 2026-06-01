@@ -1,0 +1,77 @@
+{% extends 'caresync/base.html' %}
+
+{% block content %}
+<div class="container-fluid animate-fade-in">
+    <div class="glass-panel p-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+            <div>
+                <h2 class="fw-bold mb-0">Security Audit Logs</h2>
+                <p class="text-muted small mb-0">Trace clinical profile changes, file uploads, and dashboard logins.</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                {% if user.is_superuser and logs %}
+                <form method="POST" class="m-0" onsubmit="return confirm('Are you sure you want to permanently purge all security audit logs? This action is irreversible.');">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="clear_all_logs">
+                    <button type="submit" class="btn btn-outline-danger btn-sm py-2 px-3 rounded-pill fw-semibold">
+                        <i class="fa-solid fa-trash-can me-1"></i>Purge Audit Trail
+                    </button>
+                </form>
+                {% endif %}
+                <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-semibold">
+                    <i class="fa-solid fa-shield-halved me-2"></i>Audit Logger Active
+                </span>
+            </div>
+        </div>
+        
+        {% if logs %}
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr class="text-muted small">
+                        <th>User</th>
+                        <th>Logged Action</th>
+                        <th>Timestamp</th>
+                        <th>Client IP Address</th>
+                        {% if user.is_superuser %}
+                        <th class="text-end">Actions</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td class="fw-semibold small">
+                            {% if log.user %}
+                                <div class="text-dark" style="color: var(--text-main) !important;">{{ log.user.first_name }} {{ log.user.last_name }}</div>
+                                <span class="small text-muted">@{{ log.user.username }}</span>
+                            {% else %}
+                                <span class="text-muted">System Agent</span>
+                            {% endif %}
+                        </td>
+                        <td class="small">{{ log.action }}</td>
+                        <td class="small text-muted">{{ log.timestamp|date:"Y-m-d H:i:s" }}</td>
+                        <td class="small"><code class="text-secondary">{{ log.ip_address|default:"127.0.0.1" }}</code></td>
+                        {% if user.is_superuser %}
+                        <td class="text-end">
+                            <form method="POST" class="m-0" onsubmit="return confirm('Are you sure you want to permanently delete this audit log entry?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete_log">
+                                <input type="hidden" name="log_id" value="{{ log.id }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" title="Delete log entry">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted small text-center my-5">No security audit logs recorded yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

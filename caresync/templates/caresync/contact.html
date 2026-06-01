@@ -1,0 +1,88 @@
+{% extends 'caresync/base.html' %}
+
+{% block public_content %}
+<section class="py-5" style="background: radial-gradient(circle at 90% 10%, rgba(13, 148, 136, 0.05), transparent 50%);">
+    <div class="container py-4">
+        <div class="text-center mb-5 animate-fade-in">
+            <h1 class="display-4 fw-bold font-heading text-dark" style="color: var(--text-main) !important;">Get In <span class="text-primary">Touch</span></h1>
+            <p class="text-muted fs-5">We are here to assist with any questions regarding bookings, portal accounts, or medical records.</p>
+        </div>
+        
+        <div class="row g-5">
+            <!-- Contact Form -->
+            <div class="col-lg-7">
+                <div class="glass-panel p-4 p-md-5">
+                    <h3 class="fw-bold mb-4 text-dark" style="color: var(--text-main) !important;"><i class="fa-solid fa-paper-plane text-primary me-2"></i>Send a Message</h3>
+                    <form action="{% url 'contact' %}" method="POST">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">Full Name</label>
+                                <input type="text" name="name" class="form-control" placeholder="John Doe" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">Email Address</label>
+                                <input type="email" name="email" class="form-control" placeholder="johndoe@example.com" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label text-muted small">Subject</label>
+                                <input type="text" name="subject" class="form-control" placeholder="e.g. Booking inquiry, technical support" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label text-muted small">Your Message</label>
+                                <textarea name="message" class="form-control" rows="5" placeholder="Write your message here..." required></textarea>
+                            </div>
+                            <div class="col-12 mt-4">
+                                <button type="submit" class="btn btn-primary-custom w-100 py-3">
+                                    <i class="fa-solid fa-paper-plane me-2"></i>Send Message
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Side Info -->
+            <div class="col-lg-5">
+                <div class="glass-panel p-4 h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <h4 class="fw-bold mb-4 text-dark" style="color: var(--text-main) !important;"><i class="fa-solid fa-clock-rotate-left text-primary me-2"></i>Office Hours</h4>
+                        <div class="d-flex flex-column gap-2 mb-4">
+                            <div class="d-flex justify-content-between text-muted small">
+                                <span>Monday - Friday</span>
+                                <span class="fw-semibold text-dark" style="color: var(--text-main) !important;">8:00 AM - 6:00 PM</span>
+                            </div>
+                            <div class="d-flex justify-content-between text-muted small">
+                                <span>Saturday</span>
+                                <span class="fw-semibold text-dark" style="color: var(--text-main) !important;">9:00 AM - 4:00 PM</span>
+                            </div>
+                            <div class="d-flex justify-content-between text-muted small text-danger">
+                                <span>Sunday</span>
+                                <span class="fw-semibold">Emergency Only</span>
+                            </div>
+                        </div>
+                        
+                        <h4 class="fw-bold mb-4 text-dark" style="color: var(--text-main) !important;"><i class="fa-solid fa-location-dot text-primary me-2"></i>Office Location</h4>
+                        <p class="text-muted small">
+                            Noida, Uttar Pradesh
+                        </p>
+                        
+                        <h4 class="fw-bold mb-4 text-dark" style="color: var(--text-main) !important;"><i class="fa-solid fa-phone text-primary me-2"></i>Direct Contacts</h4>
+                        <p class="text-muted small mb-0">
+                            <b>Phone:</b> +91 9289098280<br>
+                            <b>Emergency:</b> 9953713853<br>
+                            <b>Support:</b> caresync.support@gmail.com
+                        </p>
+                    </div>
+                    
+                    <div class="mt-4 pt-3 border-top border-secondary border-opacity-10 text-center">
+                        <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-semibold">
+                            <i class="fa-solid fa-circle-dot me-2 animate-pulse"></i>Direct Care Lines Active
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

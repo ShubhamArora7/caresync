@@ -1,0 +1,206 @@
+{% extends 'caresync/base.html' %}
+
+{% block content %}
+<div class="container-fluid animate-fade-in">
+    <!-- Stat Grid -->
+    <div class="row g-4 mb-4">
+        <div class="col-md">
+            <div class="glass-panel mini-stat-card">
+                <div>
+                    <h6 class="text-muted small uppercase fw-bold mb-1">Registered Patients</h6>
+                    <h3 class="fw-bold mb-0 text-dark" style="color: var(--text-main) !important;">{{ total_patients }}</h3>
+                    <span class="small text-muted">Active patient profiles</span>
+                </div>
+                <div class="icon-wrapper bg-primary"><i class="fa-solid fa-users-medical"></i></div>
+            </div>
+        </div>
+        <div class="col-md">
+            <div class="glass-panel mini-stat-card">
+                <div>
+                    <h6 class="text-muted small uppercase fw-bold mb-1">Registered Doctors</h6>
+                    <h3 class="fw-bold mb-0 text-dark" style="color: var(--text-main) !important;">{{ total_doctors }}</h3>
+                    <span class="small text-muted">Verified clinic staff</span>
+                </div>
+                <div class="icon-wrapper bg-info"><i class="fa-solid fa-user-doctor"></i></div>
+            </div>
+        </div>
+        <div class="col-md">
+            <div class="glass-panel mini-stat-card">
+                <div>
+                    <h6 class="text-muted small uppercase fw-bold mb-1">Total Consultations</h6>
+                    <h3 class="fw-bold mb-0 text-dark" style="color: var(--text-main) !important;">{{ total_appointments }}</h3>
+                    <span class="small text-muted">All historic bookings</span>
+                </div>
+                <div class="icon-wrapper bg-success"><i class="fa-solid fa-notes-medical"></i></div>
+            </div>
+        </div>
+        <div class="col-md">
+            <div class="glass-panel mini-stat-card">
+                <div>
+                    <h6 class="text-muted small uppercase fw-bold mb-1">Pending Requests</h6>
+                    <h3 class="fw-bold mb-0 text-dark" style="color: var(--text-main) !important;">{{ pending_appointments }}</h3>
+                    <span class="small text-muted">Requires review</span>
+                </div>
+                <div class="icon-wrapper bg-warning"><i class="fa-solid fa-hourglass-half"></i></div>
+            </div>
+        </div>
+        <div class="col-md">
+            <div class="glass-panel mini-stat-card">
+                <div>
+                    <h6 class="text-muted small uppercase fw-bold mb-1">System Files</h6>
+                    <h3 class="fw-bold mb-0 text-dark" style="color: var(--text-main) !important;">{{ total_records }}</h3>
+                    <span class="small text-muted">Uploaded medical files</span>
+                </div>
+                <div class="icon-wrapper bg-secondary"><i class="fa-solid fa-box-archive"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Section -->
+    <div class="row g-4">
+        <!-- Recent Appointments -->
+        <div class="col-lg-8">
+            <div class="glass-panel p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold mb-0 text-dark" style="color: var(--text-main) !important;"><i class="fa-solid fa-hospital-user text-primary me-2"></i>Recent Appointment Requests</h4>
+                    <a href="{% url 'history' %}" class="btn btn-outline-primary py-1 px-3 small" style="font-size: 0.85rem;">View Timelines</a>
+                </div>
+                
+                {% if recent_appointments %}
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr class="text-muted small">
+                                <th>Patient</th>
+                                <th>Date & Time</th>
+                                <th>Department</th>
+                                <th>Symptoms</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for app in recent_appointments %}
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold text-dark" style="color: var(--text-main) !important;">{{ app.patient.first_name|default:app.patient.username }}</div>
+                                    <span class="small text-muted">{{ app.patient.email }}</span>
+                                </td>
+                                <td class="small">{{ app.appointment_date|date:"M d, Y - H:i" }}</td>
+                                <td class="small">{{ app.department }}</td>
+                                <td class="small text-muted text-truncate" style="max-width: 150px;">{{ app.symptoms }}</td>
+                                <td>
+                                    <span class="badge badge-status {% if app.status == 'Pending' %}badge-pending{% elif app.status == 'Confirmed' %}badge-confirmed{% elif app.status == 'Completed' %}badge-completed{% else %}badge-cancelled{% endif %}">
+                                        {{ app.status }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted small my-4">No appointment requests listed.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Registrations & Logs -->
+        <div class="col-lg-4">
+            <div class="d-flex flex-column gap-4">
+                <!-- Patient Signups -->
+                <div class="glass-panel p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0 text-dark" style="color: var(--text-main) !important;"><i class="fa-solid fa-users text-primary me-2"></i>Recent Registrations</h5>
+                        <a href="{% url 'user_management' %}" class="small text-primary fw-semibold">Manage</a>
+                    </div>
+                    
+                    {% if recent_users %}
+                    <div class="d-flex flex-column gap-3 my-2">
+                        {% for u in recent_users %}
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="{% if u.profile.role == 'doctor' %}bg-success{% else %}bg-primary{% endif %} text-white rounded-circle d-flex align-items-center justify-content-center font-bold" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                                    {{ u.username|slice:":1"|upper }}
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-0 text-dark" style="color: var(--text-main) !important; font-size: 0.9rem;">
+                                        {% if u.profile.role == 'doctor' %}Dr. {% endif %}{{ u.first_name|default:u.username }}
+                                    </h6>
+                                    <span class="small text-muted d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                                        Joined {{ u.date_joined|date:"M d" }}
+                                        {% if u.profile.role == 'doctor' %}
+                                            <span class="badge bg-success bg-opacity-10 text-success border-0 px-1 py-0 fs-8" style="font-size:0.65rem;">Doctor</span>
+                                        {% else %}
+                                            <span class="badge bg-primary bg-opacity-10 text-primary border-0 px-1 py-0 fs-8" style="font-size:0.65rem;">Patient</span>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="small text-muted" style="font-size: 0.8rem;">{{ u.profile.phone|default:"No phone" }}</span>
+                                <form method="POST" action="{% url 'user_delete_dashboard' %}" onsubmit="return confirm('Are you sure you want to permanently delete the profile of {% if u.profile.role == 'doctor' %}Dr. {% endif %}{{ u.first_name }} {{ u.last_name }} (@{{ u.username }}) from the entire database?');" class="ms-1">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="delete_user_id" value="{{ u.id }}">
+                                    <button type="submit" class="btn btn-link text-danger p-0 border-0 fs-6 align-middle" title="Delete Profile"><i class="fa-solid fa-trash-can"></i></button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted small">No profiles registered.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Quick User Deletion Widget -->
+                <div class="glass-panel p-4">
+                    <h5 class="fw-bold mb-3 text-danger d-flex align-items-center gap-2"><i class="fa-solid fa-user-xmark"></i>Quick Delete Profile</h5>
+                    <p class="text-muted small">Select any patient or doctor profile to permanently remove them from the database.</p>
+                    <form method="POST" action="{% url 'user_delete_dashboard' %}" onsubmit="return confirm('Are you sure you want to permanently delete this user profile? All associated clinical data, reports, and appointments will be permanently erased.');">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Select User Profile</label>
+                            <select name="delete_user_id" class="form-select border-secondary border-opacity-25 bg-transparent text-dark" style="color: var(--text-main) !important;" required>
+                                <option value="" disabled selected class="text-muted">-- Select a Patient or Doctor --</option>
+                                {% for u in all_users_list %}
+                                    <option value="{{ u.id }}" class="text-dark">
+                                        [{{ u.profile.role|upper }}] {{ u.first_name }} {{ u.last_name }} (@{{ u.username }}) - {{ u.email }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-danger w-100 py-2">
+                            <i class="fa-solid fa-trash-can me-2"></i>Permanently Delete Profile
+                        </button>
+                    </form>
+                </div>
+
+
+                <!-- Audit Trails -->
+                <div class="glass-panel p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0 text-dark" style="color: var(--text-main) !important;"><i class="fa-solid fa-shield-halved text-primary me-2"></i>Activity Alerts</h5>
+                        <a href="{% url 'activity_logs' %}" class="small text-primary fw-semibold">Audit Logs</a>
+                    </div>
+                    
+                    {% if activity_logs %}
+                    <div class="d-flex flex-column gap-2 my-2">
+                        {% for log in activity_logs %}
+                        <div class="border-bottom border-light pb-2 mb-2">
+                            <div class="d-flex justify-content-between">
+                                <span class="fw-semibold small text-dark" style="color: var(--text-main) !important;">{{ log.user.username|default:"System" }}</span>
+                                <span class="text-muted" style="font-size: 0.7rem;">{{ log.timestamp|date:"H:i" }}</span>
+                            </div>
+                            <p class="text-muted mb-0" style="font-size: 0.8rem;">{{ log.action }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted small">No recent logs recorded.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

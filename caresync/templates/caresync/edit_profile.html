@@ -1,0 +1,86 @@
+{% extends 'caresync/base.html' %}
+
+{% block content %}
+<div class="container-fluid animate-fade-in">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="glass-panel p-4 p-md-5">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-circle">
+                        <i class="fa-solid fa-user-gear fs-3"></i>
+                    </div>
+                    <div>
+                        <h2 class="fw-bold mb-0">Edit Profile Details</h2>
+                        <p class="text-muted small mb-0">Update your clinical registration logs and emergency contact points.</p>
+                    </div>
+                </div>
+                
+                <form method="POST" enctype="multipart/form-data" class="mt-4">
+                    {% csrf_token %}
+                    
+                    <div class="row g-4">
+                        <div class="col-12"><h5 class="fw-bold mb-0 text-primary"><i class="fa-solid fa-address-card me-2"></i>General Details</h5><hr class="my-2 opacity-10"></div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">First Name</label>
+                            {{ u_form.first_name }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Last Name</label>
+                            {{ u_form.last_name }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Email Address</label>
+                            {{ u_form.email }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Phone Number</label>
+                            {{ p_form.phone }}
+                        </div>
+                        
+                        <div class="col-12 mt-4"><h5 class="fw-bold mb-0 text-primary"><i class="fa-solid fa-heart-pulse me-2"></i>Medical & Biological Settings</h5><hr class="my-2 opacity-10"></div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label text-muted small">Date of Birth</label>
+                            {{ p_form.date_of_birth }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted small">Gender</label>
+                            {{ p_form.gender }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted small">Blood Group</label>
+                            {{ p_form.blood_group }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label text-muted small">Emergency Contact Person & Phone</label>
+                            {{ p_form.emergency_contact }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label text-muted small">Physical Address</label>
+                            {{ p_form.address }}
+                        </div>
+                        
+                        <div class="col-12 mt-4"><h5 class="fw-bold mb-0 text-primary"><i class="fa-solid fa-image me-2"></i>Avatar Picture</h5><hr class="my-2 opacity-10"></div>
+                        
+                        <div class="col-md-8">
+                            <label class="form-label text-muted small">Upload Image</label>
+                            {{ p_form.profile_pic }}
+                            <span class="form-text text-muted small mt-1 d-block">Supported file types: JPEG, PNG, GIF. Max file size: 5MB.</span>
+                        </div>
+                        
+                        <div class="col-12 mt-5 d-flex gap-3">
+                            <button type="submit" class="btn btn-primary-custom flex-grow-1 py-3">
+                                <i class="fa-solid fa-circle-check me-2"></i>Save Profile Configuration
+                            </button>
+                            <a href="{% url 'profile' %}" class="btn btn-secondary-custom py-3">
+                                Cancel
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

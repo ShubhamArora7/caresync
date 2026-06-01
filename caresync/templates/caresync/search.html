@@ -1,0 +1,83 @@
+{% extends 'caresync/base.html' %}
+
+{% block content %}
+<div class="container-fluid animate-fade-in">
+    <div class="glass-panel p-4">
+        <h2 class="fw-bold mb-3"><i class="fa-solid fa-magnifying-glass text-primary me-2"></i>Search Results</h2>
+        <p class="text-muted small">Showing results for query: <b class="text-dark" style="color: var(--text-main) !important;">"{{ query }}"</b></p>
+        
+        <hr class="my-4 opacity-10">
+
+        <!-- Medical Records Results -->
+        <h4 class="fw-bold mb-3 text-primary"><i class="fa-solid fa-folder-open me-2"></i>Matching Medical Records</h4>
+        {% if records %}
+        <div class="table-responsive mb-5">
+            <table class="table align-middle">
+                <thead>
+                    <tr class="text-muted small">
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Uploaded On</th>
+                        <th>Patient</th>
+                        <th class="text-end">Download</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in records %}
+                    <tr>
+                        <td class="fw-semibold text-dark" style="color: var(--text-main) !important;">{{ r.title }}</td>
+                        <td><span class="badge bg-light text-dark border">{{ r.file_type }}</span></td>
+                        <td class="small text-muted">{{ r.uploaded_at|date:"M d, Y" }}</td>
+                        <td class="small text-muted">@{{ r.patient.username }}</td>
+                        <td class="text-end">
+                            <a href="{{ r.file.url }}" class="btn btn-sm btn-outline-success px-3 py-1" download><i class="fa-solid fa-download"></i></a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted small my-3 mb-5">No matching medical files found.</p>
+        {% endif %}
+
+        <!-- Appointments Results -->
+        <h4 class="fw-bold mb-3 text-primary"><i class="fa-solid fa-calendar-check me-2"></i>Matching Consultations</h4>
+        {% if appointments %}
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr class="text-muted small">
+                        <th>Patient</th>
+                        <th>Consultation Date</th>
+                        <th>Department</th>
+                        <th>Symptoms</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in appointments %}
+                    <tr>
+                        <td>
+                            <div class="fw-semibold text-dark" style="color: var(--text-main) !important;">{{ app.patient.first_name }} {{ app.patient.last_name }}</div>
+                            <span class="small text-muted">@{{ app.patient.username }}</span>
+                        </td>
+                        <td class="small">{{ app.appointment_date|date:"M d, Y - H:i" }}</td>
+                        <td class="small">{{ app.department }}</td>
+                        <td class="small text-muted text-truncate" style="max-width: 180px;">{{ app.symptoms }}</td>
+                        <td>
+                            <span class="badge badge-status {% if app.status == 'Pending' %}badge-pending{% elif app.status == 'Confirmed' %}badge-confirmed{% elif app.status == 'Completed' %}badge-completed{% else %}badge-cancelled{% endif %}">
+                                {{ app.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted small my-3">No matching consultations scheduled.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

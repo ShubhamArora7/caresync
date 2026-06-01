@@ -1,0 +1,59 @@
+{% extends 'caresync/base.html' %}
+
+{% block content %}
+<div class="container-fluid animate-fade-in">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="glass-panel p-4 p-md-5 text-center">
+                <div class="bg-primary bg-opacity-10 text-primary p-4 rounded-circle d-inline-flex mb-4">
+                    <i class="fa-solid fa-file-pdf fs-1"></i>
+                </div>
+                
+                {% if not user.is_superuser and user.profile.role != 'doctor' %}
+                <h2 class="fw-bold mb-3">My Medical Summary Report</h2>
+                <p class="text-muted mb-4" style="max-width: 520px; margin: 0 auto;">
+                    Generate and download a structured PDF report containing your complete patient profile, emergency contact specifications, consultation history, and list of archived medical records.
+                </p>
+                {% else %}
+                <h2 class="fw-bold mb-3">Clinical Operations Reports</h2>
+                <p class="text-muted mb-4" style="max-width: 520px; margin: 0 auto;">
+                    Generate structured clinic metrics, including total registrations, appointment status volumes, uploaded report summaries, and recent activity logs.
+                </p>
+                {% endif %}
+                
+                <hr class="my-4 opacity-10">
+                
+                <div class="row g-4 text-start mb-5">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="text-primary fs-4"><i class="fa-solid fa-calendar-check"></i></div>
+                            <div>
+                                <h6 class="fw-bold mb-0">Bookings Count</h6>
+                                <span class="small text-muted">{{ appointments.count }} scheduled consulting records</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="text-success fs-4"><i class="fa-solid fa-folder-open"></i></div>
+                            <div>
+                                <h6 class="fw-bold mb-0">Total Files</h6>
+                                <span class="small text-muted">{{ records.count }} clinical files archived</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <a href="{% url 'download_pdf_report' %}" class="btn btn-primary-custom px-5 py-3 fs-6 w-100 w-sm-auto">
+                    <i class="fa-solid fa-download me-2"></i>
+                    {% if not user.is_superuser and user.profile.role != 'doctor' %}
+                        Download My Medical Summary (PDF)
+                    {% else %}
+                        Download Operational Report (PDF)
+                    {% endif %}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

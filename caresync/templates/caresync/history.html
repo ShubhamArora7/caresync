@@ -1,0 +1,57 @@
+{% extends 'caresync/base.html' %}
+
+{% block content %}
+<div class="container-fluid animate-fade-in">
+    <div class="glass-panel p-4">
+        <h2 class="fw-bold mb-0">Consultation Timelines</h2>
+        <p class="text-muted small mb-4">Review historical medical appointments and scheduled clinical procedures.</p>
+        
+        {% if appointments %}
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr class="text-muted small">
+                        {% if user.is_superuser %}
+                        <th>Patient</th>
+                        {% endif %}
+                        <th>Date & Time</th>
+                        <th>Department</th>
+                        <th>Symptoms</th>
+                        <th>Status</th>
+                        <th>Clinic Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in appointments %}
+                    <tr>
+                        {% if user.is_superuser %}
+                        <td>
+                            <div class="fw-semibold text-dark" style="color: var(--text-main) !important;">{{ app.patient.first_name }} {{ app.patient.last_name }}</div>
+                            <span class="small text-muted">@{{ app.patient.username }}</span>
+                        </td>
+                        {% endif %}
+                        <td class="small fw-semibold">{{ app.appointment_date|date:"Y-m-d H:i" }}</td>
+                        <td class="small">{{ app.department }}</td>
+                        <td class="small text-muted" style="max-width: 200px;">{{ app.symptoms }}</td>
+                        <td>
+                            <span class="badge badge-status {% if app.status == 'Pending' %}badge-pending{% elif app.status == 'Confirmed' %}badge-confirmed{% elif app.status == 'Completed' %}badge-completed{% else %}badge-cancelled{% endif %}">
+                                {{ app.status }}
+                            </span>
+                            {% if app.status == 'Completed' and app.doctor %}
+                                <div class="small text-muted mt-1" style="font-size: 0.75rem;">
+                                    <i class="fa-solid fa-user-doctor me-1"></i>Dr. {{ app.doctor.first_name }} {{ app.doctor.last_name|default:app.doctor.username }}
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td class="small text-muted font-italic">{{ app.notes|default:"No physician notes logged." }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted small text-center my-5">No consultations scheduled in the database.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

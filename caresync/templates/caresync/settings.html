@@ -1,0 +1,89 @@
+{% extends 'caresync/base.html' %}
+
+{% block content %}
+<div class="container-fluid animate-fade-in">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="glass-panel p-4 p-md-5">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-circle">
+                        <i class="fa-solid fa-sliders fs-3"></i>
+                    </div>
+                    <div>
+                        <h2 class="fw-bold mb-0">Portal Settings</h2>
+                        <p class="text-muted small mb-0">Adjust theme preferences, clinical notifications thresholds, and security parameters.</p>
+                    </div>
+                </div>
+                
+                <hr class="my-4 opacity-10">
+                
+                <div class="d-flex flex-column gap-4">
+                    <!-- Theme Selection (Dark Mode Toggle) -->
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-bold mb-1 text-dark" style="color: var(--text-main) !important;"><i class="fa-solid fa-circle-half-stroke text-primary me-2"></i>Dark Mode Customization</h5>
+                            <p class="text-muted small mb-0">Switch between light blue and high-contrast dark clinical themes.</p>
+                        </div>
+                        <div class="form-check form-switch fs-5">
+                            <input class="form-check-input" type="checkbox" id="themeSwitch" style="cursor: pointer;">
+                        </div>
+                    </div>
+                    
+                    <hr class="opacity-10 my-0">
+                    
+                    <!-- Notification settings -->
+                    <div>
+                        <h5 class="fw-bold mb-3 text-dark" style="color: var(--text-main) !important;"><i class="fa-solid fa-bell text-primary me-2"></i>Notification Thresholds</h5>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="checkApp" checked>
+                            <label class="form-check-label text-muted small" style="cursor: pointer;" for="checkApp">Send appointment booking confirmations</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="checkAI" checked>
+                            <label class="form-check-label text-muted small" style="cursor: pointer;" for="checkAI">Alert when AI Bone Fracture scans complete</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="checkBroad" checked>
+                            <label class="form-check-label text-muted small" style="cursor: pointer;" for="checkBroad">Receive clinic-wide global announcements</label>
+                        </div>
+                    </div>
+                    
+                    <hr class="opacity-10 my-0">
+                    
+                    <!-- Account Security -->
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-bold mb-1 text-dark" style="color: var(--text-main) !important;"><i class="fa-solid fa-key text-primary me-2"></i>Security Key</h5>
+                            <p class="text-muted small mb-0">Change your portal login password.</p>
+                        </div>
+                        <a href="{% url 'change_password' %}" class="btn btn-outline-primary py-2 px-3 small" style="font-size: 0.85rem;">Modify Password</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const themeSwitch = document.getElementById('themeSwitch');
+        
+        // Load initial state
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        themeSwitch.checked = (currentTheme === 'dark');
+        
+        // Handle toggle switch
+        themeSwitch.addEventListener('change', function() {
+            const newTheme = this.checked ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            document.documentElement.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('caresync-theme', newTheme);
+            
+            // Dispatch dynamic alert toast mimicking status update
+            console.log("Theme switched to: " + newTheme);
+        });
+    });
+</script>
+{% endblock %}
