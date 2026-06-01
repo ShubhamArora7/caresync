@@ -152,3 +152,8 @@ else:
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 LOGIN_URL = 'login'
+
+CSRF_TRUSTED_ORIGINS = os.environ.get(
+    'DJANGO_CSRF_TRUSTED_ORIGINS',
+    'https://caresync-yag1.onrender.com,https://*.onrender.com'
+).split(',')
