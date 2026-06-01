@@ -16,9 +16,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project files
 COPY . .
 
+# Make start.sh executable
+RUN chmod +x start.sh
+
 # Run collectstatic
 ENV PYTHONUNBUFFERED=1
 RUN python manage.py collectstatic --noinput
 
 # Start command
-CMD ["gunicorn", "caresync_project.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["./start.sh"]
