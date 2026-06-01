@@ -25,10 +25,7 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-temp-key')
 
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = os.environ.get(
-    'DJANGO_ALLOWED_HOSTS',
-    '127.0.0.1,localhost,caresync-yag1.onrender.com,.onrender.com'
-).split(',')
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
