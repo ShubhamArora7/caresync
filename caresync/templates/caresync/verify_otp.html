@@ -44,13 +44,6 @@
                             Didn't receive the email? <a href="{% url 'resend_otp' %}" id="resendBtn" class="text-primary fw-semibold disabled" style="pointer-events: none; opacity: 0.5;">Resend Code</a>
                         </p>
                     </div>
-                    {% if request.session.signup_otp %}
-                    <div class="mt-4 p-3 rounded border border-warning bg-warning-subtle text-warning-emphasis text-center small animate-fade-in">
-                        <i class="fa-solid fa-triangle-exclamation me-1"></i>
-                        <strong>Demo Mode OTP:</strong> <code class="fs-6 fw-bold text-danger">{{ request.session.signup_otp }}</code><br>
-                        (Provided directly for live demo testing)
-                    </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
