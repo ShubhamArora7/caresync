@@ -199,7 +199,7 @@ def verify_otp(request):
             messages.error(request, "The OTP has expired. Please request a new one.")
             return render(request, 'caresync/verify_otp.html', {'email': signup_data.get('email')})
             
-        if entered_otp == saved_otp or entered_otp == '123456':
+        if entered_otp == saved_otp:
             try:
                 # OTP Verified -> Create the User and Profile (ID is made now!)
                 from datetime import datetime
@@ -360,7 +360,7 @@ def forgot_password_verify_view(request):
             messages.error(request, "The code has expired. Please request a new one.")
             return render(request, 'caresync/forgot_password_verify.html', {'email': email})
             
-        if entered_otp == saved_otp or entered_otp == '123456':
+        if entered_otp == saved_otp:
             request.session['forgot_password_verified'] = True
             messages.success(request, "Code verified successfully! You can now reset your password.")
             return redirect('forgot_password_reset')
