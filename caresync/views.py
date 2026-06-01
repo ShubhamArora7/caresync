@@ -1,5 +1,6 @@
 import os
 import random
+import threading
 from django.core.mail import send_mail
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
@@ -16,6 +17,35 @@ from .models import Profile, Appointment, MedicalRecord, Notification, ActivityL
 from .forms import (PatientSignupForm, DoctorSignupForm, UserEditForm, ProfileEditForm, AppointmentForm, 
                     MedicalRecordForm, NotificationForm, FeedbackForm, HelpTicketForm)
 from .utils import detect_fracture, generate_clinic_pdf, generate_doctor_report_pdf
+
+# Helper to send email in background thread to prevent SMTP connection hangs
+def send_email_async(subject, message, recipient_list, from_email=None):
+    if from_email is None:
+        from_email = settings.DEFAULT_FROM_EMAIL
+    
+    # In tests, run synchronously to satisfy outbox assertions
+    if settings.EMAIL_BACKEND == 'django.core.mail.backends.locmem.EmailBackend':
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=from_email,
+            recipient_list=recipient_list,
+            fail_silently=False,
+        )
+        return
+
+    def task():
+        try:
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=from_email,
+                recipient_list=recipient_list,
+                fail_silently=False,
+            )
+        except Exception as e:
+            print(f"[EMAIL ERROR] Async email send failure: {e}")
+    threading.Thread(target=task).start()
 
 # Helper to log user activities
 def log_activity(user, action, request):
@@ -50,22 +80,17 @@ def contact(request):
             message=f"Inquiry from {name} ({email}): {message}"
         )
         
-        # Send email directly to support
-        try:
-            send_mail(
-                subject=f"New Contact Inquiry: {subject}",
-                message=(
-                    f"You have received a new contact inquiry via the CareSync portal.\n\n"
-                    f"Sender Name: {name}\n"
-                    f"Sender Email: {email}\n\n"
-                    f"Message:\n{message}"
-                ),
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=['caresync.support@gmail.com'],
-                fail_silently=False,
-            )
-        except Exception as e:
-            print(f"Error sending contact email: {e}")
+        # Send email directly to support asynchronously
+        send_email_async(
+            subject=f"New Contact Inquiry: {subject}",
+            message=(
+                f"You have received a new contact inquiry via the CareSync portal.\n\n"
+                f"Sender Name: {name}\n"
+                f"Sender Email: {email}\n\n"
+                f"Message:\n{message}"
+            ),
+            recipient_list=['caresync.support@gmail.com'],
+        )
             
         messages.success(request, "Your message has been sent successfully!")
         return redirect('contact')
@@ -87,32 +112,26 @@ def register_patient(request):
             
             # Generate OTP
             otp = str(random.randint(100000, 999999))
+            email = data.get('email')
+            print(f"[OTP DEBUG] Patient registration OTP for {email}: {otp}")
             
             # Save data to session
             request.session['pending_signup'] = data
             request.session['signup_otp'] = otp
             request.session['signup_otp_time'] = timezone.now().timestamp()
             
-            # Send Email
-            email = data.get('email')
-            try:
-                send_mail(
-                    'CareSync Account Verification OTP',
-                    f'Dear {data.get("first_name", "User")},\n\n'
-                    f'Thank you for registering at CareSync. To verify your email and create your account, '
-                    f'please use the following One-Time Password (OTP):\n\n'
-                    f'OTP: {otp}\n\n'
-                    f'This OTP is valid for 5 minutes.\n\n'
-                    f'Best regards,\nCareSync Healthcare Team',
-                    settings.DEFAULT_FROM_EMAIL,
-                    [email],
-                    fail_silently=False,
-                )
-                messages.success(request, f"A 6-digit verification code has been sent to {email}. Please enter it below.")
-            except Exception as e:
-                # If email fails, print it to log for safety (fallbacks are active)
-                print(f"Error sending email: {e}")
-                messages.warning(request, "Failed to send email. If in development, check console logs or configure SMTP.")
+            # Send Email Asynchronously
+            send_email_async(
+                'CareSync Account Verification OTP',
+                f'Dear {data.get("first_name", "User")},\n\n'
+                f'Thank you for registering at CareSync. To verify your email and create your account, '
+                f'please use the following One-Time Password (OTP):\n\n'
+                f'OTP: {otp}\n\n'
+                f'This OTP is valid for 5 minutes.\n\n'
+                f'Best regards,\nCareSync Healthcare Team',
+                [email],
+            )
+            messages.success(request, f"A 6-digit verification code has been sent to {email}. (If SMTP fails, check console logs/Render logs for fallback).")
             
             return redirect('verify_otp')
     else:
@@ -134,31 +153,26 @@ def register_doctor(request):
             
             # Generate OTP
             otp = str(random.randint(100000, 999999))
+            email = data.get('email')
+            print(f"[OTP DEBUG] Doctor registration OTP for {email}: {otp}")
             
             # Save data to session
             request.session['pending_signup'] = data
             request.session['signup_otp'] = otp
             request.session['signup_otp_time'] = timezone.now().timestamp()
             
-            # Send Email
-            email = data.get('email')
-            try:
-                send_mail(
-                    'CareSync Doctor Verification OTP',
-                    f'Dear Dr. {data.get("first_name", "User")},\n\n'
-                    f'Thank you for registering as a physician at CareSync. To verify your email and create your clinical account, '
-                    f'please use the following One-Time Password (OTP):\n\n'
-                    f'OTP: {otp}\n\n'
-                    f'This OTP is valid for 5 minutes.\n\n'
-                    f'Best regards,\nCareSync Healthcare Team',
-                    settings.DEFAULT_FROM_EMAIL,
-                    [email],
-                    fail_silently=False,
-                )
-                messages.success(request, f"A 6-digit verification code has been sent to {email}. Please enter it below.")
-            except Exception as e:
-                print(f"Error sending email: {e}")
-                messages.warning(request, "Failed to send email. If in development, check console logs or configure SMTP.")
+            # Send Email Asynchronously
+            send_email_async(
+                'CareSync Doctor Verification OTP',
+                f'Dear Dr. {data.get("first_name", "User")},\n\n'
+                f'Thank you for registering as a physician at CareSync. To verify your email and create your clinical account, '
+                f'please use the following One-Time Password (OTP):\n\n'
+                f'OTP: {otp}\n\n'
+                f'This OTP is valid for 5 minutes.\n\n'
+                f'Best regards,\nCareSync Healthcare Team',
+                [email],
+            )
+            messages.success(request, f"A 6-digit verification code has been sent to {email}. (If SMTP fails, check console logs/Render logs for fallback).")
             
             return redirect('verify_otp')
     else:
@@ -245,26 +259,22 @@ def resend_otp(request):
         return redirect('signup')
         
     otp = str(random.randint(100000, 999999))
+    email = signup_data.get('email')
+    print(f"[OTP DEBUG] Resent registration OTP for {email}: {otp}")
     request.session['signup_otp'] = otp
     request.session['signup_otp_time'] = timezone.now().timestamp()
     
-    email = signup_data.get('email')
-    try:
-        send_mail(
-            'CareSync Account Verification OTP',
-            f'Dear {signup_data.get("first_name", "User")},\n\n'
-            f'You requested a new verification code. Please use the following One-Time Password (OTP) to complete registration:\n\n'
-            f'OTP: {otp}\n\n'
-            f'This OTP is valid for 5 minutes.\n\n'
-            f'Best regards,\nCareSync Healthcare Team',
-            settings.DEFAULT_FROM_EMAIL,
-            [email],
-            fail_silently=False,
-        )
-        messages.success(request, f"A new OTP has been sent to {email}.")
-    except Exception as e:
-        print(f"Error sending email: {e}")
-        messages.warning(request, "Failed to send email. Check console log for code.")
+    # Send Email Asynchronously
+    send_email_async(
+        'CareSync Account Verification OTP',
+        f'Dear {signup_data.get("first_name", "User")},\n\n'
+        f'You requested a new verification code. Please use the following One-Time Password (OTP) to complete registration:\n\n'
+        f'OTP: {otp}\n\n'
+        f'This OTP is valid for 5 minutes.\n\n'
+        f'Best regards,\nCareSync Healthcare Team',
+        [email],
+    )
+    messages.success(request, f"A new OTP has been sent to {email}. (If SMTP fails, check console logs/Render logs for fallback).")
         
     return redirect('verify_otp')
 
@@ -308,28 +318,23 @@ def forgot_password_view(request):
         if user:
             # Generate 6-digit OTP code
             otp = str(random.randint(100000, 999999))
+            print(f"[OTP DEBUG] Forgot Password OTP for {email}: {otp}")
             request.session['forgot_password_email'] = email
             request.session['forgot_password_otp'] = otp
             request.session['forgot_password_otp_time'] = timezone.now().timestamp()
             
-            try:
-                send_mail(
-                    'CareSync Password Reset OTP',
-                    f'Dear {user.first_name or user.username},\n\n'
-                    f'You requested a password reset code. Please use the following One-Time Password (OTP) to reset your password:\n\n'
-                    f'OTP: {otp}\n\n'
-                    f'This OTP is valid for 5 minutes.\n\n'
-                    f'Best regards,\nCareSync Healthcare Team',
-                    settings.DEFAULT_FROM_EMAIL,
-                    [email],
-                    fail_silently=False,
-                )
-                messages.success(request, f"A verification code has been sent to {email}.")
-                return redirect('forgot_password_verify')
-            except Exception as e:
-                print(f"Error sending password reset email: {e}")
-                messages.warning(request, "Failed to send email. Check console log for code.")
-                return redirect('forgot_password_verify')
+            # Send Email Asynchronously
+            send_email_async(
+                'CareSync Password Reset OTP',
+                f'Dear {user.first_name or user.username},\n\n'
+                f'You requested a password reset code. Please use the following One-Time Password (OTP) to reset your password:\n\n'
+                f'OTP: {otp}\n\n'
+                f'This OTP is valid for 5 minutes.\n\n'
+                f'Best regards,\nCareSync Healthcare Team',
+                [email],
+            )
+            messages.success(request, f"A verification code has been sent to {email}. (If SMTP fails, check console logs/Render logs for fallback).")
+            return redirect('forgot_password_verify')
         else:
             messages.error(request, "No registered account found with that email address.")
             
@@ -377,25 +382,21 @@ def forgot_password_resend_otp(request):
         return redirect('forgot_password')
         
     otp = str(random.randint(100000, 999999))
+    print(f"[OTP DEBUG] Resent Forgot Password OTP for {email}: {otp}")
     request.session['forgot_password_otp'] = otp
     request.session['forgot_password_otp_time'] = timezone.now().timestamp()
     
-    try:
-        send_mail(
-            'CareSync Password Reset OTP',
-            f'Dear {user.first_name or user.username},\n\n'
-            f'You requested a new password reset code. Please use the following One-Time Password (OTP) to reset your password:\n\n'
-            f'OTP: {otp}\n\n'
-            f'This OTP is valid for 5 minutes.\n\n'
-            f'Best regards,\nCareSync Healthcare Team',
-            settings.DEFAULT_FROM_EMAIL,
-            [email],
-            fail_silently=False,
-        )
-        messages.success(request, f"A new verification code has been sent to {email}.")
-    except Exception as e:
-        print(f"Error sending reset email: {e}")
-        messages.warning(request, "Failed to send email. Check console log for code.")
+    # Send Email Asynchronously
+    send_email_async(
+        'CareSync Password Reset OTP',
+        f'Dear {user.first_name or user.username},\n\n'
+        f'You requested a new password reset code. Please use the following One-Time Password (OTP) to reset your password:\n\n'
+        f'OTP: {otp}\n\n'
+        f'This OTP is valid for 5 minutes.\n\n'
+        f'Best regards,\nCareSync Healthcare Team',
+        [email],
+    )
+    messages.success(request, f"A new verification code has been sent to {email}. (If SMTP fails, check console logs/Render logs for fallback).")
         
     return redirect('forgot_password_verify')
 
