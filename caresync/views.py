@@ -125,12 +125,12 @@ def contact(request):
                 f"Sender Email: {email}\n\n"
                 f"Message:\n{message}"
             ),
-            recipient_list=['caresync.support@gmail.com'],
+            recipient_list=[settings.DEFAULT_FROM_EMAIL],
         )
             
         messages.success(request, "Your message has been sent successfully!")
         return redirect('contact')
-    return render(request, 'caresync/contact.html')
+    return render(request, 'caresync/contact.html', {'support_email': settings.DEFAULT_FROM_EMAIL})
 
 # Authentication Views
 def register_patient(request):

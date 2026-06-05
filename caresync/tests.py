@@ -490,7 +490,7 @@ class CareSyncTests(TestCase):
         self.assertEqual(mail.outbox[0].subject, 'New Contact Inquiry: General Inquiry')
         self.assertIn('Test Sender', mail.outbox[0].body)
         self.assertIn('sender@example.com', mail.outbox[0].body)
-        self.assertIn('caresync.support@gmail.com', mail.outbox[0].to)
+        self.assertIn(settings.DEFAULT_FROM_EMAIL, mail.outbox[0].to)
 
     def test_help_ticket_per_user_numbering(self):
         """Test that help tickets are numbered sequentially per user starting at 1"""
