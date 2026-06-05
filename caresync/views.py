@@ -34,17 +34,53 @@ def send_email_async(subject, message, recipient_list, from_email=None):
         )
         return
 
+    # Check for Brevo API key to bypass SMTP port blocks on Render
+    brevo_api_key = os.environ.get('BREVO_API_KEY')
+
     def task():
-        try:
-            send_mail(
-                subject=subject,
-                message=message,
-                from_email=from_email,
-                recipient_list=recipient_list,
-                fail_silently=False,
-            )
-        except Exception as e:
-            print(f"[EMAIL ERROR] Async email send failure: {e}")
+        import json
+        import urllib.request
+        import urllib.error
+
+        if brevo_api_key:
+            # Send via Brevo HTTP API (Port 443, never blocked)
+            url = "https://api.brevo.com/v3/smtp/email"
+            headers = {
+                "accept": "application/json",
+                "api-key": brevo_api_key,
+                "content-type": "application/json"
+            }
+            body = {
+                "sender": {
+                    "name": "CareSync",
+                    "email": from_email
+                },
+                "to": [{"email": r} for r in recipient_list],
+                "subject": subject,
+                "textContent": message
+            }
+            try:
+                data = json.dumps(body).encode('utf-8')
+                req = urllib.request.Request(url, data=data, headers=headers, method='POST')
+                with urllib.request.urlopen(req, timeout=10) as response:
+                    res_body = response.read().decode('utf-8')
+                    print(f"[EMAIL SUCCESS] Sent email via Brevo HTTP API: {res_body}")
+            except Exception as e:
+                print(f"[EMAIL ERROR] Brevo HTTP API send failure: {e}")
+        else:
+            # Fallback to standard SMTP
+            try:
+                send_mail(
+                    subject=subject,
+                    message=message,
+                    from_email=from_email,
+                    recipient_list=recipient_list,
+                    fail_silently=False,
+                )
+                print(f"[EMAIL SUCCESS] Sent email via SMTP")
+            except Exception as e:
+                print(f"[EMAIL ERROR] Async SMTP email send failure: {e}")
+
     threading.Thread(target=task).start()
 
 # Helper to log user activities
