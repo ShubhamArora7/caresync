@@ -1010,6 +1010,60 @@ class CareSyncTests(TestCase):
         self.assertContains(response, 'Forgot Password?')
         self.assertContains(response, 'Forgot your password? <a href="/forgot-password/"')
 
+    def test_admin_can_delete_and_purge_inquiries(self):
+        """Test that admins can delete individual client inquiries and purge the entire list"""
+        from .models import Notification
+        
+        # Create an inquiry
+        inq1 = Notification.objects.create(
+            recipient=None,
+            title="New Contact Inquiry: Booking help",
+            message="Please help me book a consultation."
+        )
+        inq2 = Notification.objects.create(
+            recipient=None,
+            title="New Contact Inquiry: Technical support",
+            message="My dashboard is loading slowly."
+        )
+        
+        # Log in as admin
+        self.client.login(username='testadmin', password='testpassword123')
+        
+        # Verify both inquiries appear on the messages page first
+        response = self.client.get(reverse('messages'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "New Contact Inquiry: Booking help")
+        self.assertContains(response, "New Contact Inquiry: Technical support")
+        
+        # Delete the first inquiry
+        del_res = self.client.post(reverse('messages'), {
+            'action': 'delete_inquiry',
+            'inquiry_id': inq1.id
+        })
+        self.assertEqual(del_res.status_code, 302)
+        self.assertRedirects(del_res, reverse('messages'))
+        
+        # Verify first is deleted, second remains
+        self.assertFalse(Notification.objects.filter(id=inq1.id).exists())
+        self.assertTrue(Notification.objects.filter(id=inq2.id).exists())
+        
+        response2 = self.client.get(reverse('messages'))
+        self.assertNotContains(response2, "New Contact Inquiry: Booking help")
+        self.assertContains(response2, "New Contact Inquiry: Technical support")
+        
+        # Purge all inquiries
+        purge_res = self.client.post(reverse('messages'), {
+            'action': 'purge_inquiries'
+        })
+        self.assertEqual(purge_res.status_code, 302)
+        
+        # Verify both are deleted
+        self.assertFalse(Notification.objects.filter(id=inq2.id).exists())
+        
+        response3 = self.client.get(reverse('messages'))
+        self.assertNotContains(response3, "New Contact Inquiry: Technical support")
+
+
 
 
 

@@ -1396,39 +1396,59 @@ def settings_view(request):
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
 def messages_view(request):
-    if request.method == 'POST' and 'ticket_id' in request.POST:
-        ticket_id = request.POST.get('ticket_id')
-        ticket = get_object_or_404(HelpTicket, id=ticket_id)
+    if request.method == 'POST':
+        action = request.POST.get('action')
         
-        if 'close_ticket' in request.POST:
+        # 1. Delete single client inquiry (Notification)
+        if action == 'delete_inquiry':
+            inquiry_id = request.POST.get('inquiry_id')
+            inquiry = get_object_or_404(Notification, id=inquiry_id, recipient=None, title__startswith="New Contact Inquiry:")
+            inquiry.delete()
+            log_activity(request.user, f"Deleted client contact inquiry ID #{inquiry_id}", request)
+            messages.success(request, "Inquiry deleted successfully.")
+            return redirect('messages')
+            
+        # 2. Purge all client inquiries
+        elif action == 'purge_inquiries':
+            deleted_count, _ = Notification.objects.filter(recipient=None, title__startswith="New Contact Inquiry:").delete()
+            log_activity(request.user, f"Purged all client inquiries ({deleted_count} deleted)", request)
+            messages.success(request, f"Successfully deleted {deleted_count} inquiries.")
+            return redirect('messages')
+            
+        # 3. Existing Ticket Response handling
+        elif 'ticket_id' in request.POST or action == 'ticket_action':
+            ticket_id = request.POST.get('ticket_id')
+            ticket = get_object_or_404(HelpTicket, id=ticket_id)
+            
+            if 'close_ticket' in request.POST:
+                ticket.status = 'Resolved'
+                ticket.save()
+                
+                # Create a notification for the patient
+                Notification.objects.create(
+                    recipient=ticket.user,
+                    title=f"Ticket #{ticket.user_ticket_num} Resolved",
+                    message=f"Your support ticket '{ticket.subject}' has been marked as Resolved by the administrator."
+                )
+                log_activity(request.user, f"Marked support ticket #{ticket.user_ticket_num} as Resolved", request)
+                messages.success(request, f"Ticket #{ticket.user_ticket_num} has been marked as Resolved.")
+                return redirect('messages')
+                
+            reply_content = request.POST.get('reply_content')
+            ticket.admin_response = reply_content
             ticket.status = 'Resolved'
             ticket.save()
             
             # Create a notification for the patient
             Notification.objects.create(
                 recipient=ticket.user,
-                title=f"Ticket #{ticket.user_ticket_num} Resolved",
-                message=f"Your support ticket '{ticket.subject}' has been marked as Resolved by the administrator."
+                title=f"Reply to Ticket #{ticket.user_ticket_num}",
+                message=f"Admin responded to your support ticket '{ticket.subject}': {reply_content}"
             )
-            log_activity(request.user, f"Marked support ticket #{ticket.user_ticket_num} as Resolved", request)
-            messages.success(request, f"Ticket #{ticket.user_ticket_num} has been marked as Resolved.")
+            log_activity(request.user, f"Responded to support ticket #{ticket.user_ticket_num}", request)
+            role_label = ticket.user.profile.role if hasattr(ticket.user, 'profile') else 'user'
+            messages.success(request, f"Response sent to {role_label} @{ticket.user.username} successfully!")
             return redirect('messages')
-            
-        reply_content = request.POST.get('reply_content')
-        ticket.admin_response = reply_content
-        ticket.status = 'Resolved'
-        ticket.save()
-        
-        # Create a notification for the patient
-        Notification.objects.create(
-            recipient=ticket.user,
-            title=f"Reply to Ticket #{ticket.user_ticket_num}",
-            message=f"Admin responded to your support ticket '{ticket.subject}': {reply_content}"
-        )
-        log_activity(request.user, f"Responded to support ticket #{ticket.user_ticket_num}", request)
-        role_label = ticket.user.profile.role if hasattr(ticket.user, 'profile') else 'user'
-        messages.success(request, f"Response sent to {role_label} @{ticket.user.username} successfully!")
-        return redirect('messages')
 
     # We display contact-based global messages
     queries = Notification.objects.filter(recipient=None, title__startswith="New Contact Inquiry:").order_by('-created_at')
